@@ -9,6 +9,7 @@ import java.io.IOException;
 
 public class Main extends Application {
 
+    // 运行 mvn javafx:run -pl chatting-client
     public static void main(String[] args) {
         launch();
     }
