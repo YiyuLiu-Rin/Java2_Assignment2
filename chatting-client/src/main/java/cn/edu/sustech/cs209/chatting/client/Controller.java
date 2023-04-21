@@ -1,6 +1,8 @@
 package cn.edu.sustech.cs209.chatting.client;
 
 import cn.edu.sustech.cs209.chatting.common.Message;
+import cn.edu.sustech.cs209.chatting.common.Request;
+import cn.edu.sustech.cs209.chatting.common.User;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -8,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -23,40 +26,47 @@ public class Controller implements Initializable {
     @FXML
     ListView<Message> chatContentList;
 
-    String username;
+    String userName;
+
+    //
+    int onlineAmount;
+    //
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        Dialog<String> dialog = new TextInputDialog();
-        dialog.setTitle("Login");
-        dialog.setHeaderText(null);
-        dialog.setContentText("Username:");
+//        if (input.isPresent() && !input.get()[1].isEmpty() && !input.get()[2].isEmpty()) {
+//            /*
+//               TODO: Check if there is a user with the same name among the currently logged-in users,
+//                     if so, ask the user to change the username
+//             */
+//            System.out.println("Login succeeded.");
+//        } else {
+//            System.out.println("Login failed.");
+//            Platform.exit();
+//        }
+//
+//        userName = input.get()[1];
+//
+//        chatContentList.setCellFactory(new MessageCellFactory());
 
-        Optional<String> input = dialog.showAndWait();
-        if (input.isPresent() && !input.get().isEmpty()) {
-            /*
-               TODO: Check if there is a user with the same name among the currently logged-in users,
-                     if so, ask the user to change the username
-             */
-            username = input.get();
-        } else {
-            System.out.println("Invalid username " + input + ", exiting");
-            Platform.exit();
-        }
-
-        chatContentList.setCellFactory(new MessageCellFactory());
     }
 
     @FXML
     public void createPrivateChat() {
-        AtomicReference<String> user = new AtomicReference<>();
+        AtomicReference<String> user = new AtomicReference<>(); // 是啥？
 
         Stage stage = new Stage();
         ComboBox<String> userSel = new ComboBox<>();
 
         // FIXME: get the user list from server, the current user's name should be filtered out
-        userSel.getItems().addAll("Item 1", "Item 2", "Item 3");
+
+        //
+        User user1 = new User("usr1", "1");  user1.setOnline(true);
+        User user2 = new User("usr2", "2");  user2.setOnline(true);
+        User user3 = new User("usr3", "3");  user3.setOnline(true);
+        //
+        userSel.getItems().addAll(user1.getUserName(), user2.getUserName(), user3.getUserName());
 
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
@@ -111,8 +121,10 @@ public class Controller implements Initializable {
 
                 @Override
                 public void updateItem(Message msg, boolean empty) {
-                    super.updateItem(msg, empty);
+                    /*super.updateItem(msg, empty);
                     if (empty || Objects.isNull(msg)) {
+                        //setText(null);
+                        //setGraphic(null);
                         return;
                     }
 
@@ -124,7 +136,7 @@ public class Controller implements Initializable {
                     nameLabel.setWrapText(true);
                     nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
-                    if (username.equals(msg.getSentBy())) {
+                    if (userName.equals(msg.getSentBy())) {
                         wrapper.setAlignment(Pos.TOP_RIGHT);
                         wrapper.getChildren().addAll(msgLabel, nameLabel);
                         msgLabel.setPadding(new Insets(0, 20, 0, 0));
@@ -135,7 +147,7 @@ public class Controller implements Initializable {
                     }
 
                     setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                    setGraphic(wrapper);
+                    setGraphic(wrapper);*/
                 }
             };
         }
