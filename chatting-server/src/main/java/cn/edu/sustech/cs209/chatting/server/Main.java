@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-
     public static void main(String[] args) throws IOException {
 
         // 维护的服务器端数据
@@ -41,6 +40,7 @@ class Service implements Runnable {
     private Socket socket;
     private ObjectInputStream in;
     private ObjectOutputStream out;
+    private User user;
 
     public Service(Socket socket, List<User> userList, List<Chat> chatList) {
         this.socket = socket;
@@ -66,7 +66,7 @@ class Service implements Runnable {
                                 out.writeObject(1);
                                 break;
                             }
-                            User user = userList.get(userList.indexOf(request.getUser()));
+                            user = userList.get(userList.indexOf(request.getUser()));
                             if (!request.getUser().getPassword().equals(user.getPassword())) {
                                 // 密码错误
                                 out.writeObject(2);
@@ -74,10 +74,12 @@ class Service implements Runnable {
                             }
                             if (user.isOnline()) {
                                 // 已登录
+                                System.out.println(user + "  !!!!!!!!!!!1");
                                 out.writeObject(3);
                                 break;
                             }
                             // 成功登录
+                            System.out.println("Log in succeeded: " + user.getUserName());
                             user.setOnline(true);
                             out.writeObject(user);
                             break;
@@ -89,9 +91,11 @@ class Service implements Runnable {
                                 break;
                             }
                             // 成功注册
-                            request.getUser().setOnline(true);
-                            userList.add(request.getUser());
-                            out.writeObject(request.getUser());
+                            user = request.getUser();
+                            System.out.println("Sign up succeeded: " + user.getUserName());
+                            user.setOnline(true);
+                            userList.add(user);
+                            out.writeObject(user);
                             break;
                         }
                     }
@@ -99,10 +103,11 @@ class Service implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("A client lost connection.");
+            user.setOnline(false);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            System.out.println("!!!!!!!!!!!!!!!!");
+            System.out.println("A service is closed: " + this);
             try {
                 in.close();
                 out.close();

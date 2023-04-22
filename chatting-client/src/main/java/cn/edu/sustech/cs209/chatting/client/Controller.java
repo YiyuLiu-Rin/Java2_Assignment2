@@ -35,7 +35,6 @@ public class Controller implements Initializable {
 
     // 不变信息
     Client client;
-
     User user;
 
     // 待维护信息

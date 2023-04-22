@@ -4,6 +4,7 @@ import cn.edu.sustech.cs209.chatting.common.Request;
 import cn.edu.sustech.cs209.chatting.common.User;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -43,12 +44,13 @@ public class Client extends Application {
         }
 
         // 根据Login页面的输入情况决定是否加载主窗口
+        boolean load = true;
         while (true) {
             Optional<String[]> input = showLoginDialog();
             if (!input.isPresent()) {
                 // 无输入
                 System.out.println("Login failed: No input.");
-                Platform.exit();
+                load = false;
                 break;
             }
             if (input.get()[1].isEmpty() || input.get()[2].isEmpty()) {
@@ -64,7 +66,7 @@ public class Client extends Application {
                 if (obj.getClass() == User.class) {
                     // 登录成功
                     user = (User)obj;
-                    System.out.println("Log in succeeded. Username: " + user.getUserName());
+                    System.out.println("Log in succeeded: " + user.getUserName());
                     break;
                 }
                 else if (obj.getClass() == Integer.class) {
@@ -93,13 +95,14 @@ public class Client extends Application {
                     throw new RuntimeException("Unexpected branch");
             }
             else if (input.get()[0].equals("SIGNUP")) {
-                Request request = new Request(Request.RequestType.SIGN_UP, new User(input.get()[1], input.get()[2]));
+                User createdUser = new User(input.get()[1], input.get()[2]);
+                Request request = new Request(Request.RequestType.SIGN_UP, createdUser);
                 out.writeObject(request);
                 Object obj = in.readObject();
                 if (obj.getClass() == User.class) {
                     // 注册成功
                     user = (User)obj;
-                    System.out.println("Sign up succeeded. Username: " + user.getUserName());
+                    System.out.println("Sign up succeeded: " + user.getUserName());
                     break;
                 }
                 else if (obj.getClass() == Integer.class) {
@@ -119,18 +122,23 @@ public class Client extends Application {
         }
 
         // 初始化Controller并加载主窗口
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("main.fxml"));
-        stage.setScene(new Scene(fxmlLoader.load()));
-        stage.setTitle("Chatting Client");
-        controller = fxmlLoader.getController();
-        controller.setClient(this);
-        controller.setUser(user);
-        controller.setCurrentUserLabel();
-        stage.show();
-
-
+        if (load) {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("main.fxml"));
+            stage.setScene(new Scene(fxmlLoader.load()));
+            stage.setTitle("Chatting Client");
+            stage.setOnCloseRequest(e -> {
+                user.setOnline(false);
+                System.out.println("A user is offline: " + user + " " + user.getUserName());
+            });
+            controller = fxmlLoader.getController();
+            controller.setClient(this);
+            controller.setUser(user);
+            controller.setCurrentUserLabel();
+            stage.show();
+        }
 
     }
+
 
     private static Optional<String[]> showLoginDialog() {
 
@@ -184,11 +192,19 @@ public class Client extends Application {
 
     private static void showInfoDialog(String info) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information Dialog");
+        alert.setTitle("Notice");
         alert.setHeaderText(null);
         alert.setContentText(info);
 
         alert.showAndWait();
     }
 
+}
+
+class RoutineRequestThread implements Runnable {
+
+    @Override
+    public void run() {
+
+    }
 }
