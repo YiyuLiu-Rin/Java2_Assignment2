@@ -98,7 +98,7 @@ class Service implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Client lost connection.");
+            System.out.println("A client lost connection.");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {

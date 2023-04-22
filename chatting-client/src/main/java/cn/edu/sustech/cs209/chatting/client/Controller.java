@@ -1,55 +1,52 @@
 package cn.edu.sustech.cs209.chatting.client;
 
+import cn.edu.sustech.cs209.chatting.common.Chat;
 import cn.edu.sustech.cs209.chatting.common.Message;
-import cn.edu.sustech.cs209.chatting.common.Request;
 import cn.edu.sustech.cs209.chatting.common.User;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.net.URL;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Controller implements Initializable {
 
     @FXML
+    Label ChatNameLabel;
+    @FXML
+    Label currentUserLabel;
+    @FXML
+    Label onlineAmountLabel;
+    @FXML
+    ListView<Chat> chatList;
+    @FXML
+    ListView<User> onlineUserList;
+    @FXML
     ListView<Message> chatContentList;
 
-    String userName;
+    // 不变信息
+    Client client;
 
-    //
+    User user;
+
+    // 待维护信息
     int onlineAmount;
-    //
+
+
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
-//        if (input.isPresent() && !input.get()[1].isEmpty() && !input.get()[2].isEmpty()) {
-//            /*
-//               TODO: Check if there is a user with the same name among the currently logged-in users,
-//                     if so, ask the user to change the username
-//             */
-//            System.out.println("Login succeeded.");
-//        } else {
-//            System.out.println("Login failed.");
-//            Platform.exit();
-//        }
-//
-//        userName = input.get()[1];
-//
-//        chatContentList.setCellFactory(new MessageCellFactory());
-
+        chatContentList.setCellFactory(new MessageCellFactory());
     }
 
     @FXML
@@ -110,6 +107,13 @@ public class Controller implements Initializable {
         // TODO
     }
 
+    @FXML
+    public void doSendEmoji() {}
+
+    @FXML
+    public void doSendFile() {}
+
+
     /**
      * You may change the cell factory if you changed the design of {@code Message} model.
      * Hint: you may also define a cell factory for the chats displayed in the left panel, or simply override the toString method.
@@ -121,7 +125,7 @@ public class Controller implements Initializable {
 
                 @Override
                 public void updateItem(Message msg, boolean empty) {
-                    /*super.updateItem(msg, empty);
+                    super.updateItem(msg, empty);
                     if (empty || Objects.isNull(msg)) {
                         //setText(null);
                         //setGraphic(null);
@@ -129,14 +133,14 @@ public class Controller implements Initializable {
                     }
 
                     HBox wrapper = new HBox();
-                    Label nameLabel = new Label(msg.getSentBy());
-                    Label msgLabel = new Label(msg.getData());
+                    Label nameLabel = new Label(msg.getSentBy().getUserName());
+                    Label msgLabel = new Label(msg.getContent());
 
                     nameLabel.setPrefSize(50, 20);
                     nameLabel.setWrapText(true);
                     nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
-                    if (userName.equals(msg.getSentBy())) {
+                    if (user.getUserName().equals(msg.getSentBy())) {
                         wrapper.setAlignment(Pos.TOP_RIGHT);
                         wrapper.getChildren().addAll(msgLabel, nameLabel);
                         msgLabel.setPadding(new Insets(0, 20, 0, 0));
@@ -147,9 +151,28 @@ public class Controller implements Initializable {
                     }
 
                     setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-                    setGraphic(wrapper);*/
+                    setGraphic(wrapper);
                 }
             };
         }
+    }
+
+
+
+
+    public void setCurrentUserLabel() {
+        currentUserLabel.setText(user.getUserName());
+    }
+
+    public void setCurrentOnlineAmount() {
+        onlineAmountLabel.setText(String.valueOf(onlineAmount));
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 }

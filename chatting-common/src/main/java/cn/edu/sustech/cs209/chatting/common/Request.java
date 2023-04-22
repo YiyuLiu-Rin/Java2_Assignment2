@@ -18,7 +18,6 @@ public class Request implements Serializable {
 
     public enum RequestType implements Serializable {
         LOG_IN, SIGN_UP,
-        GET_USER_LIST, GET_CHAT_LIST, GET_ONLINE_AMOUNT,  // 不断发送以更新
-        C
+        GET_USER_LIST, GET_CHAT_LIST, GET_ONLINE_AMOUNT  // 不断发送以更新
     }
 }

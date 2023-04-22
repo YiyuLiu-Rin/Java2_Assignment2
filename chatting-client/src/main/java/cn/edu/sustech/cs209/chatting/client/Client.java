@@ -14,16 +14,16 @@ import javafx.stage.Stage;
 import java.io.*;
 import java.net.Socket;
 import java.util.Optional;
-import java.util.Scanner;
 
-public class Main extends Application {
+public class Client extends Application {
     // 运行: mvn javafx:run -pl chatting-client
 
-    Controller controller;
-    User user;
-    Socket socket;
-    ObjectInputStream in;
-    ObjectOutputStream out;
+    private Socket socket;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+
+    private Controller controller;
+    private User user;
 
     public static void main(String[] args) {
         launch();
@@ -118,10 +118,14 @@ public class Main extends Application {
                 throw new RuntimeException("Unexpected branch");
         }
 
-        // 加载主窗口
+        // 初始化Controller并加载主窗口
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("main.fxml"));
         stage.setScene(new Scene(fxmlLoader.load()));
         stage.setTitle("Chatting Client");
+        controller = fxmlLoader.getController();
+        controller.setClient(this);
+        controller.setUser(user);
+        controller.setCurrentUserLabel();
         stage.show();
 
 
