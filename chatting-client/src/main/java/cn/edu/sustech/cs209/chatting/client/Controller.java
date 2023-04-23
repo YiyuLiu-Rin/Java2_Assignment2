@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Controller implements Initializable {
 
     @FXML
-    Label ChatNameLabel;
+    Label chatNameLabel;
     @FXML
     Label currentUserLabel;
     @FXML
@@ -50,25 +50,33 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        chatContentListView.setCellFactory(new MessageCellFactory());
+
+        chatListView.setCellFactory(new ChatNameCellFactory());
         onlineUserListView.setCellFactory(new OnlineUserCellFactory());
+        chatContentListView.setCellFactory(new MessageCellFactory());
 
         onlineUserList = new ArrayList<>();
         chatList = new ArrayList<>();
         currentChat = null;
         onlineAmount = 0;
+
     }
 
     public void refresh() {
+
+        ObservableList<User> userObservableList = FXCollections.observableArrayList(onlineUserList);
+        onlineUserListView.setItems(userObservableList);
+
+        ObservableList<Chat> chatObservableList = FXCollections.observableArrayList(chatList);
+        chatListView.setItems(chatObservableList);
+
+        if (currentChat != null) {
+            setChatNameLabel();
+            // TODO: 设置 chatContentListView
+        }
+
         setOnlineAmountLabel();
 
-        // 更新 ListView
-        ObservableList<User> userObservableList = FXCollections.observableArrayList(onlineUserList);
-//        userObservableList.addAll(onlineUserList);
-        System.out.println("1 ################");
-        onlineUserListView.setItems(userObservableList);
-        System.out.println("2 ################");
-//        System.out.println(onlineUserList);  //
     }
 
     @FXML
@@ -190,12 +198,11 @@ public class Controller implements Initializable {
     private class OnlineUserCellFactory implements Callback<ListView<User>, ListCell<User>> {
         @Override
         public ListCell<User> call(ListView<User> param) {
-            System.out.println("1 ###########################");
             return new ListCell<User>() {
 
                 @Override
                 public void updateItem(User usr, boolean empty) {
-                    System.out.println("2 ###########################");
+
                     super.updateItem(usr, empty);
                     if (empty || Objects.isNull(usr)) {
                         //setText(null);
@@ -204,23 +211,47 @@ public class Controller implements Initializable {
                     }
 
                     HBox wrapper = new HBox();
-//                    Label nameLabel = new Label(usr.getSentBy().getUserName());
-//                    Label msgLabel = new Label(usr.getContent());
+
                     Label nameLabel = new Label(usr.getUserName());
 
-                    nameLabel.setPrefSize(50, 20);
+                    nameLabel.setPrefSize(200, 20);
                     nameLabel.setWrapText(true);
                     nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
-//                    if (user.getUserName().equals(usr.getSentBy())) {
-//                        wrapper.setAlignment(Pos.TOP_RIGHT);
-//                        wrapper.getChildren().addAll(msgLabel, nameLabel);
-//                        msgLabel.setPadding(new Insets(0, 20, 0, 0));
-//                    } else {
-//                        wrapper.setAlignment(Pos.TOP_LEFT);
-//                        wrapper.getChildren().addAll(nameLabel, msgLabel);
-//                        msgLabel.setPadding(new Insets(0, 0, 0, 20));
-//                    }
+                    wrapper.setAlignment(Pos.TOP_LEFT);
+                    wrapper.getChildren().addAll(nameLabel);
+                    nameLabel.setPadding(new Insets(0, 0, 0, 20));
+
+                    setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                    setGraphic(wrapper);
+                }
+            };
+        }
+    }
+
+    private class ChatNameCellFactory implements Callback<ListView<Chat>, ListCell<Chat>> {
+        @Override
+        public ListCell<Chat> call(ListView<Chat> param) {
+            return new ListCell<Chat>() {
+
+                @Override
+                public void updateItem(Chat chat, boolean empty) {
+
+                    super.updateItem(chat, empty);
+                    if (empty || Objects.isNull(chat)) {
+                        //setText(null);
+                        //setGraphic(null);
+                        return;
+                    }
+
+                    HBox wrapper = new HBox();
+
+                    Label nameLabel = new Label(getChatName(chat));
+
+                    nameLabel.setPrefSize(200, 20);
+                    nameLabel.setWrapText(true);
+                    nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+
                     wrapper.setAlignment(Pos.TOP_LEFT);
                     wrapper.getChildren().addAll(nameLabel);
                     nameLabel.setPadding(new Insets(0, 0, 0, 20));
@@ -234,7 +265,27 @@ public class Controller implements Initializable {
 
 
 
+    public String getChatName(Chat chat) {
+        String chatName = null;
+        if (chat.getChatType() == Chat.ChatType.PRIVATE_CHAT) {
+            for (User usr : chat.getParticipants()) {
+                if (!usr.getUserName().equals(user.getUserName())) {
+                    chatName = usr.getUserName();
+                    break;
+                }
+            }
+        }
+        else if (chat.getChatType() == Chat.ChatType.GROUP_CHAT) {
+            chatName = chat.getGroupChatName();
+        }
+        else
+            throw new RuntimeException("Unexpected branch");
+        return chatName;
+    }
 
+    public void setChatNameLabel() {
+        chatNameLabel.setText(getChatName(currentChat));
+    }
 
     public void setCurrentUserLabel() {
         currentUserLabel.setText(user.getUserName());
