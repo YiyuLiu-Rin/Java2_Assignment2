@@ -107,7 +107,23 @@ class Service implements Runnable {
                             out.writeObject(new Response(RequestType.GET_ONLINE_USER_LIST, onlineUserList));
                             break;
                         }
-
+                        case GET_CHAT_LIST: {
+                            List<Chat> hisChatList = new ArrayList<>();
+                            for (Chat chat : chatList) {
+                                for (User usr : chat.getParticipants()) {
+                                    if (usr.getUserName().equals(request.getUser().getUserName())) {
+                                        hisChatList.add(chat);
+                                        break;
+                                    }
+                                }
+                            }
+                            out.writeObject(new Response(RequestType.GET_CHAT_LIST, hisChatList));
+                            break;
+                        }
+                        case GET_CURRENT_CHAT: {
+                            //TODO
+                            break;
+                        }
                         case GET_ONLINE_AMOUNT: {
                             Integer amount = (int)(userList.stream()
                                     .filter(User::isOnline).count());

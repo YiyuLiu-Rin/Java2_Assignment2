@@ -163,6 +163,10 @@ public class Client extends Application {
 
     }
 
+    public void creatPrivateChat(List<String> participantNames) {
+
+    }
+
     private static Optional<String[]> showLoginDialog() {
 
         // 创建对话框
@@ -250,9 +254,9 @@ public class Client extends Application {
                 if (flag) {
                     try {
                         out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST, user));
+//                        out.writeObject(new Request(RequestType.GET_CHAT_LIST, user));
+//                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT, user));
                         out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT, user));
-                        //TODO
-
                         while (true) {
                             Thread.sleep(10);
                             if (receiveThread.refreshed) {

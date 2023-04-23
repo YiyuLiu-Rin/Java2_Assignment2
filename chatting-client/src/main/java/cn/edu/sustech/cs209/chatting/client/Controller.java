@@ -50,9 +50,6 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        chatContentListView = new ListView<>(); //
-        onlineUserListView = new ListView<>(); //
-
         chatContentListView.setCellFactory(new MessageCellFactory());
         onlineUserListView.setCellFactory(new OnlineUserCellFactory());
 
@@ -108,10 +105,10 @@ public class Controller implements Initializable {
 
 
         // TODO: otherwise, create a new chat item in the left panel, the title should be the selected user's name
-//        List<User> participants = new ArrayList<>();
-//        participants.add(user);
-//        participants.add()
-//        Chat chat = new Chat(Chat.ChatType.PRIVATE_CHAT, );
+        List<String> participantNames = new ArrayList<>();
+        participantNames.add(user.getUserName());
+        participantNames.add(String.valueOf(targetUser));
+        client.creatPrivateChat(participantNames);
 
     }
 

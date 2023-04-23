@@ -51,6 +51,10 @@ public class Chat implements Comparable<Chat> {
             this.groupChatName = groupChatName;
     }
 
+    public List<User> getParticipants() {
+        return participants;
+    }
+
     public enum ChatType {
         PRIVATE_CHAT, GROUP_CHAT
     }
