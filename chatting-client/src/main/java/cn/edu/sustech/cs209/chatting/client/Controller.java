@@ -3,6 +3,8 @@ package cn.edu.sustech.cs209.chatting.client;
 import cn.edu.sustech.cs209.chatting.common.Chat;
 import cn.edu.sustech.cs209.chatting.common.Message;
 import cn.edu.sustech.cs209.chatting.common.User;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -14,6 +16,8 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,58 +31,88 @@ public class Controller implements Initializable {
     @FXML
     Label onlineAmountLabel;
     @FXML
-    ListView<Chat> chatList;
+    ListView<Chat> chatListView;
     @FXML
-    ListView<User> onlineUserList;
+    ListView<User> onlineUserListView;
     @FXML
-    ListView<Message> chatContentList;
+    ListView<Message> chatContentListView;
 
     // 不变信息
-    Client client;
-    User user;
+    private Client client;
+    private User user;
 
     // 待维护信息
-    int onlineAmount;
-
-
+    private List<User> onlineUserList;
+    private List<Chat> chatList;
+    private Chat currentChat;
+    private int onlineAmount;
 
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        chatContentList.setCellFactory(new MessageCellFactory());
+        chatContentListView = new ListView<>(); //
+        onlineUserListView = new ListView<>(); //
+
+        chatContentListView.setCellFactory(new MessageCellFactory());
+        onlineUserListView.setCellFactory(new OnlineUserCellFactory());
+
+        onlineUserList = new ArrayList<>();
+        chatList = new ArrayList<>();
+        currentChat = null;
+        onlineAmount = 0;
+    }
+
+    public void refresh() {
+        setOnlineAmountLabel();
+
+        // 更新 ListView
+        ObservableList<User> userObservableList = FXCollections.observableArrayList(onlineUserList);
+//        userObservableList.addAll(onlineUserList);
+        System.out.println("1 ################");
+        onlineUserListView.setItems(userObservableList);
+        System.out.println("2 ################");
+//        System.out.println(onlineUserList);  //
     }
 
     @FXML
     public void createPrivateChat() {
-        AtomicReference<String> user = new AtomicReference<>(); // 是啥？
 
+        AtomicReference<String> targetUser = new AtomicReference<>();
         Stage stage = new Stage();
-        ComboBox<String> userSel = new ComboBox<>();
 
-        // FIXME: get the user list from server, the current user's name should be filtered out
-
-        //
-        User user1 = new User("usr1", "1");  user1.setOnline(true);
-        User user2 = new User("usr2", "2");  user2.setOnline(true);
-        User user3 = new User("usr3", "3");  user3.setOnline(true);
-        //
-        userSel.getItems().addAll(user1.getUserName(), user2.getUserName(), user3.getUserName());
+        ComboBox<String> userSelectionBox = new ComboBox<>();
+//        List<String> onlineUsers = onlineUserList.stream()
+//                        .filter(usr -> !usr.getUserName().equals(this.user.getUserName()))
+//                .map(User::getUserName).toList();
+        List<String> onlineUsers = new ArrayList<>();
+        for (User usr : onlineUserList) {
+            if (!usr.getUserName().equals(this.user.getUserName()))
+                onlineUsers.add(usr.getUserName());
+        }
+        userSelectionBox.getItems().addAll(onlineUsers);
 
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
-            user.set(userSel.getSelectionModel().getSelectedItem());
+            targetUser.set(userSelectionBox.getSelectionModel().getSelectedItem());
             stage.close();
         });
 
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(20, 20, 20, 20));
-        box.getChildren().addAll(userSel, okBtn);
+        box.getChildren().addAll(userSelectionBox, okBtn);
         stage.setScene(new Scene(box));
         stage.showAndWait();
 
         // TODO: if the current user already chatted with the selected user, just open the chat with that user
+
+
         // TODO: otherwise, create a new chat item in the left panel, the title should be the selected user's name
+//        List<User> participants = new ArrayList<>();
+//        participants.add(user);
+//        participants.add()
+//        Chat chat = new Chat(Chat.ChatType.PRIVATE_CHAT, );
+
     }
 
     /**
@@ -156,6 +190,52 @@ public class Controller implements Initializable {
         }
     }
 
+    private class OnlineUserCellFactory implements Callback<ListView<User>, ListCell<User>> {
+        @Override
+        public ListCell<User> call(ListView<User> param) {
+            System.out.println("1 ###########################");
+            return new ListCell<User>() {
+
+                @Override
+                public void updateItem(User usr, boolean empty) {
+                    System.out.println("2 ###########################");
+                    super.updateItem(usr, empty);
+                    if (empty || Objects.isNull(usr)) {
+                        //setText(null);
+                        //setGraphic(null);
+                        return;
+                    }
+
+                    HBox wrapper = new HBox();
+//                    Label nameLabel = new Label(usr.getSentBy().getUserName());
+//                    Label msgLabel = new Label(usr.getContent());
+                    Label nameLabel = new Label(usr.getUserName());
+
+                    nameLabel.setPrefSize(50, 20);
+                    nameLabel.setWrapText(true);
+                    nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
+
+//                    if (user.getUserName().equals(usr.getSentBy())) {
+//                        wrapper.setAlignment(Pos.TOP_RIGHT);
+//                        wrapper.getChildren().addAll(msgLabel, nameLabel);
+//                        msgLabel.setPadding(new Insets(0, 20, 0, 0));
+//                    } else {
+//                        wrapper.setAlignment(Pos.TOP_LEFT);
+//                        wrapper.getChildren().addAll(nameLabel, msgLabel);
+//                        msgLabel.setPadding(new Insets(0, 0, 0, 20));
+//                    }
+                    wrapper.setAlignment(Pos.TOP_LEFT);
+                    wrapper.getChildren().addAll(nameLabel);
+                    nameLabel.setPadding(new Insets(0, 0, 0, 20));
+
+                    setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+                    setGraphic(wrapper);
+                }
+            };
+        }
+    }
+
+
 
 
 
@@ -163,7 +243,7 @@ public class Controller implements Initializable {
         currentUserLabel.setText(user.getUserName());
     }
 
-    public void setCurrentOnlineAmount() {
+    public void setOnlineAmountLabel() {
         onlineAmountLabel.setText(String.valueOf(onlineAmount));
     }
 
@@ -173,5 +253,13 @@ public class Controller implements Initializable {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public void setOnlineAmount(int onlineAmount) {
+        this.onlineAmount = onlineAmount;
+    }
+
+    public void setOnlineUserList(List<User> onlineUserList) {
+        this.onlineUserList = onlineUserList;
     }
 }

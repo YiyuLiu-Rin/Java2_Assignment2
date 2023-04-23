@@ -21,12 +21,12 @@
     <SplitPane dividerPositions="0.25" focusTraversable="true" VBox.vgrow="ALWAYS">
         <VBox prefHeight="200.0" prefWidth="100.0">
             <Label text="my chat"/>
-            <ListView fx:id="chatList" prefHeight="300.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
+            <ListView fx:id="chatListView" prefHeight="300.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
             <Label text="online users"/>
-            <ListView fx:id="onlineUserList" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
+            <ListView fx:id="onlineUserListView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
         </VBox>
         <SplitPane dividerPositions="0.85" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0">
-            <ListView fx:id="chatContentList" prefHeight="200.0" prefWidth="200.0" />
+            <ListView fx:id="chatContentListView" prefHeight="200.0" prefWidth="200.0" />
             <HBox prefHeight="100.0" prefWidth="200.0">
                 <TextArea fx:id="inputArea" prefHeight="138.0" prefWidth="500.0" HBox.hgrow="ALWAYS" />
                 <Button maxHeight="1.7976931348623157E308" mnemonicParsing="false" onAction="#doSendMessage" text="send" HBox.hgrow="ALWAYS" />

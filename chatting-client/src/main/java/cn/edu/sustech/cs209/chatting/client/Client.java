@@ -1,6 +1,8 @@
 package cn.edu.sustech.cs209.chatting.client;
 
 import cn.edu.sustech.cs209.chatting.common.Request;
+import cn.edu.sustech.cs209.chatting.common.RequestType;
+import cn.edu.sustech.cs209.chatting.common.Response;
 import cn.edu.sustech.cs209.chatting.common.User;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -14,6 +16,8 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class Client extends Application {
@@ -25,6 +29,10 @@ public class Client extends Application {
 
     private Controller controller;
     private User user;
+
+    private RoutineRequestThread request;
+    private ReceiveResponseThread receive;
+    Thread requestThread, receiveThread;
 
     public static void main(String[] args) {
         launch();
@@ -60,13 +68,13 @@ public class Client extends Application {
                 continue;
             }
             if (input.get()[0].equals("LOGIN")) {
-                Request request = new Request(Request.RequestType.LOG_IN, new User(input.get()[1], input.get()[2]));
+                Request request = new Request(RequestType.LOG_IN, new User(input.get()[1], input.get()[2]));
                 out.writeObject(request);
                 Object obj = in.readObject();
                 if (obj.getClass() == User.class) {
                     // 登录成功
                     user = (User)obj;
-                    System.out.println("Log in succeeded: " + user.getUserName());
+                    System.out.println("Log in succeeded. @" + user.getUserName());
                     break;
                 }
                 else if (obj.getClass() == Integer.class) {
@@ -96,13 +104,13 @@ public class Client extends Application {
             }
             else if (input.get()[0].equals("SIGNUP")) {
                 User createdUser = new User(input.get()[1], input.get()[2]);
-                Request request = new Request(Request.RequestType.SIGN_UP, createdUser);
+                Request request = new Request(RequestType.SIGN_UP, createdUser);
                 out.writeObject(request);
                 Object obj = in.readObject();
                 if (obj.getClass() == User.class) {
                     // 注册成功
                     user = (User)obj;
-                    System.out.println("Sign up succeeded: " + user.getUserName());
+                    System.out.println("Sign up succeeded. @" + user.getUserName());
                     break;
                 }
                 else if (obj.getClass() == Integer.class) {
@@ -127,18 +135,33 @@ public class Client extends Application {
             stage.setScene(new Scene(fxmlLoader.load()));
             stage.setTitle("Chatting Client");
             stage.setOnCloseRequest(e -> {
-                user.setOnline(false);
-                System.out.println("A user is offline: " + user + " " + user.getUserName());
+                System.out.println("A client is closed. @" + user.getUserName());
+                try {
+                    out.writeObject(new Request(RequestType.DISCONNECT, user));
+                    requestThread.interrupt();
+                    receiveThread.interrupt();
+                    Platform.exit();
+                    System.exit(0);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
             });
             controller = fxmlLoader.getController();
             controller.setClient(this);
             controller.setUser(user);
             controller.setCurrentUserLabel();
             stage.show();
+
+            request = new RoutineRequestThread(in, out);
+            receive = new ReceiveResponseThread(in, out);
+            request.receiveThread = receive;
+            requestThread = new Thread(request);
+            receiveThread = new Thread(receive);
+            requestThread.start();
+            receiveThread.start();
         }
 
     }
-
 
     private static Optional<String[]> showLoginDialog() {
 
@@ -199,12 +222,112 @@ public class Client extends Application {
         alert.showAndWait();
     }
 
-}
-
-class RoutineRequestThread implements Runnable {
-
-    @Override
-    public void run() {
-
+    public void setRequestThreadFlag(boolean flag) {
+        request.flag = flag;
     }
+
+
+    /**
+     * 不断向服务器发送请求，获取在线用户列表、在线人数、
+     */
+    private class RoutineRequestThread implements Runnable {
+
+        ObjectInputStream in;
+        ObjectOutputStream out;
+        ReceiveResponseThread receiveThread;
+        boolean flag;
+
+        public RoutineRequestThread(ObjectInputStream in, ObjectOutputStream out) {
+            this.in = in;
+            this.out = out;
+            this.flag = true;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("RoutineRequestThread started.");
+            while (true) {
+                if (flag) {
+                    try {
+                        out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST, user));
+                        out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT, user));
+                        //TODO
+
+                        while (true) {
+                            Thread.sleep(10);
+                            if (receiveThread.refreshed) {
+                                receiveThread.refreshed = false;
+                                break;
+                            }
+                        }
+                        Thread.sleep(500);
+                    } catch (IOException | InterruptedException e) {
+//                        throw new RuntimeException(e);
+                        System.out.println("RoutineRequestThread is interrupted.");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 接收服务器收到请求后返回的回应
+     */
+    private class ReceiveResponseThread implements Runnable {
+
+        ObjectInputStream in;
+        ObjectOutputStream out;
+        boolean flag;
+        boolean refreshed;
+
+        public ReceiveResponseThread(ObjectInputStream in, ObjectOutputStream out) {
+            this.in = in;
+            this.out = out;
+            this.flag = true;
+            this.refreshed = true;
+        }
+
+        @Override
+        public void run() {
+            System.out.println("ReceiveResponseThread started.");
+            while (true) {
+                if (flag) {
+                    try {
+                        Object obj = in.readObject();
+                        if (obj.getClass() == Response.class) {
+                            Response response = (Response)obj;
+                            System.out.println("A client received a response: " + response.responseType +
+                                    " @" + user.getUserName());
+                            switch (response.responseType) {
+                                case GET_ONLINE_USER_LIST: {
+                                    controller.setOnlineUserList((List<User>)response.getObj());
+                                    break;
+                                }
+
+
+                                case GET_ONLINE_AMOUNT: {
+                                    controller.setOnlineAmount((Integer)response.getObj());
+                                    Platform.runLater(() -> {
+                                        controller.refresh();
+                                        refreshed = true;
+                                    });
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            throw new RuntimeException("Unexpected branch");
+                        }
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+//                        throw new RuntimeException(e);
+                        System.out.println("ReceiveResponseThread read to the end.");
+                    }
+                }
+            }
+        }
+    }
+
 }
+

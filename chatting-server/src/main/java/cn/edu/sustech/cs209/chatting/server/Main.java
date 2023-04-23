@@ -1,8 +1,6 @@
 package cn.edu.sustech.cs209.chatting.server;
 
-import cn.edu.sustech.cs209.chatting.common.Chat;
-import cn.edu.sustech.cs209.chatting.common.Request;
-import cn.edu.sustech.cs209.chatting.common.User;
+import cn.edu.sustech.cs209.chatting.common.*;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -53,12 +51,13 @@ class Service implements Runnable {
         try {
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
-            while (true) {
+            boolean flag = true;
+            while (flag) {
                 Object obj = in.readObject();
                 if (obj.getClass() == Request.class) {
                     Request request = (Request)obj;
                     System.out.println("Server received a request: " + request.requestType +
-                            ", by: " + request.getUser().getUserName());
+                            " @" + request.getUser().getUserName());
                     switch (request.requestType) {
                         case LOG_IN: {
                             if (!userList.contains(request.getUser())) {
@@ -74,12 +73,11 @@ class Service implements Runnable {
                             }
                             if (user.isOnline()) {
                                 // 已登录
-                                System.out.println(user + "  !!!!!!!!!!!1");
                                 out.writeObject(3);
                                 break;
                             }
                             // 成功登录
-                            System.out.println("Log in succeeded: " + user.getUserName());
+                            System.out.println("Log in succeeded. @" + user.getUserName());
                             user.setOnline(true);
                             out.writeObject(user);
                             break;
@@ -92,17 +90,42 @@ class Service implements Runnable {
                             }
                             // 成功注册
                             user = request.getUser();
-                            System.out.println("Sign up succeeded: " + user.getUserName());
+                            System.out.println("Sign up succeeded. @" + user.getUserName());
                             user.setOnline(true);
                             userList.add(user);
                             out.writeObject(user);
+                            break;
+                        }
+                        case GET_ONLINE_USER_LIST: {
+//                            List<User> onlineUserList = userList.stream()
+//                                    .filter(User::isOnline).toList();
+                            List<User> onlineUserList = new ArrayList<>();
+                            for (User user : userList) {
+                                if (user.isOnline())
+                                    onlineUserList.add(user);
+                            }
+                            out.writeObject(new Response(RequestType.GET_ONLINE_USER_LIST, onlineUserList));
+                            break;
+                        }
+
+                        case GET_ONLINE_AMOUNT: {
+                            Integer amount = (int)(userList.stream()
+                                    .filter(User::isOnline).count());
+                            out.writeObject(new Response(RequestType.GET_ONLINE_AMOUNT, amount));
+                            break;
+                        }
+
+                        case DISCONNECT: {
+                            System.out.println("A client closed connection.");
+                            user.setOnline(false);
+                            flag = false;
                             break;
                         }
                     }
                 }
             }
         } catch (IOException e) {
-            System.out.println("A client lost connection.");
+            System.out.println("A client lost connection by accident.");
             user.setOnline(false);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
