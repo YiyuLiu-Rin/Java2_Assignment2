@@ -24,6 +24,7 @@ public class Chat implements Serializable, Comparable<Chat> {
 
     @Override
     public boolean equals(Object o) {
+        if (o == null) return false;
         if (this == o) return true;
         if (this.getClass() != o.getClass()) return false;
 

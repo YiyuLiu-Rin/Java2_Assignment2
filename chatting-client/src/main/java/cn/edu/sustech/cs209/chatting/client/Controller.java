@@ -59,6 +59,16 @@ public class Controller implements Initializable {
         currentChat = null;
         onlineAmount = 0;
 
+
+        ////////
+//        chatListView.getSelectionModel().selectedItemProperty().addListener((var1, var2, var3) -> {
+//            System.out.println("!!!!!!!!!!!!!!!!");
+//        });
+
+//        chatListView.getSelectionModel().selectedItemProperty().addListener((observable, oldVal, newVal) -> {
+//            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+//        });
+
     }
 
     public void refresh() {
@@ -81,6 +91,12 @@ public class Controller implements Initializable {
         }
 
         setOnlineAmountLabel();
+
+        ////////////
+//        MultipleSelectionModel<Chat> chatSelectionModel = chatListView.getSelectionModel();
+//        Chat selectedChat = chatSelectionModel.getSelectedItem();
+//        if (selectedChat != null)
+//            System.out.println(selectedChat + " !!!!!!!!!!!!!!!!");
 
     }
 
@@ -129,7 +145,42 @@ public class Controller implements Initializable {
      * UserA, UserB (2)
      */
     @FXML
-    public void createGroupChat() {}
+    public void createGroupChat() {
+
+        /*AtomicReference<String> targetUsers = new AtomicReference<>();  // 一定要用这个吗？
+        Stage stage = new Stage();
+
+//        ComboBox<String> userSelectionBox = new ComboBox<>();
+//        List<String> onlineUsers = new ArrayList<>();
+//        for (User usr : onlineUserList) {
+//            if (!usr.equals(this.user))
+//                onlineUsers.add(usr.getUserName());
+//        }
+//        userSelectionBox.getItems().addAll(onlineUsers);
+
+        CheckBox userSelectionBox = new CheckBox();
+        List<String> onlineUsers = new ArrayList<>();
+        for (User usr : onlineUserList) {
+            if (!usr.equals(this.user))
+                onlineUsers.add(usr.getUserName());
+        }
+        userSelectionBox.getItems().addAll(onlineUsers);
+
+        Button okBtn = new Button("OK");
+        okBtn.setOnAction(e -> {
+            targetUsers.set(userSelectionBox.getSelectionModel().getSelectedItem());
+            stage.close();
+            client.creatPrivateChat(String.valueOf(targetUsers));
+        });
+
+        HBox box = new HBox(10);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(20, 120, 20, 20));  // TODO: 调整GUI大小
+        box.getChildren().addAll(userSelectionBox, okBtn);
+        stage.setScene(new Scene(box));
+        stage.showAndWait();*/
+
+    }
 
     /**
      * Sends the message to the <b>currently selected</b> chat.
@@ -150,6 +201,14 @@ public class Controller implements Initializable {
     @FXML
     public void doSendFile() {}
 
+    @FXML
+    public void changeCurrentChat() {
+        Chat chat = chatListView.getSelectionModel().getSelectedItem();
+        client.changeCurrentChat(chat);
+    }
+
+
+
 
     /**
      * You may change the cell factory if you changed the design of {@code Message} model.
@@ -163,7 +222,7 @@ public class Controller implements Initializable {
                 @Override
                 public void updateItem(Message msg, boolean empty) {
 
-                    System.out.println("MessageCell updated.");
+//                    System.out.println("MessageCell updated.");
                     super.updateItem(msg, empty);
                     if (empty || Objects.isNull(msg)) {
                         setText(null);

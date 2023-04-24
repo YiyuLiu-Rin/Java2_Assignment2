@@ -16,7 +16,7 @@ public class User implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this.getClass() != obj.getClass()) return false;
+        if (obj == null || this.getClass() != obj.getClass()) return false;
         return this.userName.equals(((User)obj).userName);
     }
 

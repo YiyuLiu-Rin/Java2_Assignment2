@@ -30,11 +30,17 @@ public class Request implements Serializable {
         this.participantNames = participantNames;
     }
 
-    // 构造以下请求：SEND_MESSAGE, SEND_EMOJI, SEND_FILE, CHANGE_CURRENT_CHAT
+    // 构造以下请求：SEND_MESSAGE, SEND_EMOJI, SEND_FILE
     public Request(RequestType requestType, Chat chat, Message message) {
         this.requestType = requestType;
         this.chat = chat;
         this.message = message;
+    }
+
+    // 构造以下请求：CHANGE_CURRENT_CHAT
+    public Request(RequestType requestType, Chat chat) {
+        this.requestType = requestType;
+        this.chat = chat;
     }
 
 

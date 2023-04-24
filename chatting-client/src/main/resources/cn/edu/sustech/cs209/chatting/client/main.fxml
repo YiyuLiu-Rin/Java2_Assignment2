@@ -20,10 +20,10 @@
     </MenuBar>
     <SplitPane dividerPositions="0.25" focusTraversable="true" VBox.vgrow="ALWAYS">
         <VBox prefHeight="200.0" prefWidth="100.0">
-            <Label text="my chat"/>
-            <ListView fx:id="chatListView" prefHeight="300.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
-            <Label text="online users"/>
-            <ListView fx:id="onlineUserListView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
+            <Label text="my chat" />
+            <ListView fx:id="chatListView" onMouseClicked="#changeCurrentChat" prefHeight="300.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+            <Label text="online users" />
+            <ListView fx:id="onlineUserListView" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
         </VBox>
         <SplitPane dividerPositions="0.85" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0">
             <ListView fx:id="chatContentListView" prefHeight="200.0" prefWidth="200.0" />

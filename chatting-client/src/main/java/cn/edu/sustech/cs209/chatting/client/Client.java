@@ -183,6 +183,14 @@ public class Client extends Application {
     }
 
 
+    public void changeCurrentChat(Chat chat) {
+        try {
+            out.writeObject(new Request(RequestType.CHANGE_CURRENT_CHAT, chat));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static Optional<String[]> showLoginDialog() {
 
         // 创建对话框
@@ -328,13 +336,6 @@ public class Client extends Application {
                                     break;
                                 }
                                 case GET_CURRENT_CHAT: {
-                                    if (response.getObj() != null) { //
-                                        System.out.println("Client.330 ##########"); //
-                                        Chat currentChat = (Chat) response.getObj(); //
-                                        System.out.println(currentChat.getParticipants().get(0).getUserName() + " " + //
-                                                currentChat.getParticipants().get(1).getUserName() + " " + //
-                                                currentChat.getMessages()); //
-                                    } //
                                     controller.setCurrentChat((Chat) response.getObj());
                                     break;
                                 }
