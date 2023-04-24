@@ -15,7 +15,6 @@ public class Chat implements Serializable, Comparable<Chat> {
     private List<User> participants;
     private long lastActiveTime;
     private List<Message> messages;
-    private String groupChatName;
 
     @Override
     public int compareTo(Chat o) {
@@ -29,34 +28,29 @@ public class Chat implements Serializable, Comparable<Chat> {
         if (this.getClass() != o.getClass()) return false;
 
         Chat chat = (Chat)o;
-        if (this.chatType != chat.chatType) return false;
-        if (this.chatType == ChatType.PRIVATE_CHAT) {
-            this.participants.sort(Comparator.comparing(User::getUserName));
-            chat.participants.sort(Comparator.comparing(User::getUserName));
-            for (int i = 0; i < this.participants.size(); i++) {
-                if (!this.participants.get(i).getUserName().equals(chat.participants.get(i).getUserName()))
-                    return false;
-            }
-            return true;
+        if (this.chatType != chat.chatType || this.participants.size() != chat.participants.size()) return false;
+        // note: 这里的排序更改了原对象，但采用此设计
+        this.participants.sort(Comparator.comparing(User::getUserName));
+        chat.participants.sort(Comparator.comparing(User::getUserName));
+        for (int i = 0; i < this.participants.size(); i++) {
+            if (!this.participants.get(i).getUserName().equals(chat.participants.get(i).getUserName()))
+                return false;
         }
-        else {
-            return this.groupChatName.equals(chat.groupChatName);
-        }
+        return true;
     }
 
-    public Chat(List<User> participants) {
-        this.chatType = ChatType.PRIVATE_CHAT;
+    public Chat(ChatType chatType, List<User> participants) {
+        this.chatType = chatType;
         this.participants = participants;
         this.lastActiveTime = System.currentTimeMillis();
         this.messages = new ArrayList<>();
     }
 
-    public Chat(List<User> participants, String groupChatName) {
-        this.chatType = ChatType.GROUP_CHAT;
-        this.participants = participants;
-        this.lastActiveTime = System.currentTimeMillis();
-        this.messages = new ArrayList<>();
-        this.groupChatName = groupChatName;
+    public Chat(Chat chat) {
+        this.chatType = chat.chatType;
+        this.participants = new ArrayList<>(chat.participants);
+        this.lastActiveTime = chat.lastActiveTime;
+        this.messages = new ArrayList<>(chat.messages);
     }
 
     public ChatType getChatType() {
@@ -71,12 +65,12 @@ public class Chat implements Serializable, Comparable<Chat> {
         return lastActiveTime;
     }
 
-    public List<Message> getMessages() {
-        return messages;
+    public void setLastActiveTime(long lastActiveTime) {
+        this.lastActiveTime = lastActiveTime;
     }
 
-    public String getGroupChatName() {
-        return groupChatName;
+    public List<Message> getMessages() {
+        return messages;
     }
 
     public enum ChatType implements Serializable {

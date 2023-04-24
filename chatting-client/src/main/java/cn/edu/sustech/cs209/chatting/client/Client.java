@@ -127,7 +127,7 @@ public class Client extends Application {
             stage.setOnCloseRequest(e -> {
                 System.out.println("A client is closed. @" + user.getUserName());
                 try {
-                    out.writeObject(new Request(RequestType.DISCONNECT, user));
+                    out.writeObject(new Request(RequestType.DISCONNECT));
                     requestThread.interrupt();
                     receiveThread.interrupt();
                     Platform.exit();
@@ -174,6 +174,12 @@ public class Client extends Application {
 
     public void sendMessage(String text, Chat chat) {
         Message message = new Message(System.currentTimeMillis(), user, text);
+        Request request = new Request(RequestType.SEND_MESSAGE, chat, message);
+        try {
+            out.writeObject(request);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -262,10 +268,10 @@ public class Client extends Application {
             while (true) {
                 if (flag) {
                     try {
-                        out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST, user));
-                        out.writeObject(new Request(RequestType.GET_CHAT_LIST, user));
-                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT, user));
-                        out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT, user));
+                        out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST));
+                        out.writeObject(new Request(RequestType.GET_CHAT_LIST));
+                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT));
+                        out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT));
                         while (true) {
                             Thread.sleep(10);
                             if (receiveThread.refreshed) {
@@ -277,6 +283,7 @@ public class Client extends Application {
                     } catch (IOException | InterruptedException e) {
 //                        e.printStackTrace();
                         System.out.println("RoutineRequestThread is killed.");
+                        break;
                     }
                 }
             }
@@ -321,6 +328,13 @@ public class Client extends Application {
                                     break;
                                 }
                                 case GET_CURRENT_CHAT: {
+                                    if (response.getObj() != null) { //
+                                        System.out.println("Client.330 ##########"); //
+                                        Chat currentChat = (Chat) response.getObj(); //
+                                        System.out.println(currentChat.getParticipants().get(0).getUserName() + " " + //
+                                                currentChat.getParticipants().get(1).getUserName() + " " + //
+                                                currentChat.getMessages()); //
+                                    } //
                                     controller.setCurrentChat((Chat) response.getObj());
                                     break;
                                 }

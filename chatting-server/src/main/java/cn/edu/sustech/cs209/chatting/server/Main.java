@@ -28,7 +28,6 @@ public class Main {
             Thread t = new Thread(new Service(socket, userList, chatList));
             t.start();
         }
-
     }
 
 }
@@ -61,14 +60,11 @@ class Service implements Runnable {
             while (flag) {
                 Object obj = in.readObject();
                 if (obj.getClass() == Request.class) {
-                    Request request = (Request)obj;
-                    if (request.requestType == RequestType.LOG_IN || request.requestType == RequestType.SIGN_UP ||
-                            request.requestType == RequestType.DISCONNECT) {
-                        System.out.println("Server received a request: " + request.requestType +
-                                " @" + request.getUser().getUserName());
-                    }
+                    Request request = (Request) obj;
                     switch (request.requestType) {
                         case LOG_IN: {
+                            System.out.println("Server received a request: LOG_IN. @" +
+                                    request.getUser().getUserName());
                             if (!userList.contains(request.getUser())) {
                                 // 无此用户
                                 out.writeObject(1);
@@ -92,6 +88,8 @@ class Service implements Runnable {
                             break;
                         }
                         case SIGN_UP: {
+                            System.out.println("Server received a request: SIGN_UP. @" +
+                                    request.getUser().getUserName());
                             if (userList.contains(request.getUser())) {
                                 // 已有用户
                                 out.writeObject(1);
@@ -120,22 +118,23 @@ class Service implements Runnable {
                             List<Chat> hisChatList = new ArrayList<>();
                             for (Chat chat : chatList) {
                                 for (User usr : chat.getParticipants()) {
-                                    if (usr.getUserName().equals(request.getUser().getUserName())) {
+                                    if (usr.equals(user)) {
                                         hisChatList.add(chat);
                                         break;
                                     }
                                 }
                             }
-                            Collections.sort(hisChatList, Comparator.reverseOrder());
+                            hisChatList.sort(Comparator.reverseOrder());
                             out.writeObject(new Response(RequestType.GET_CHAT_LIST, hisChatList));
                             break;
                         }
                         case GET_CURRENT_CHAT: {
-                            out.writeObject(new Response(RequestType.GET_CURRENT_CHAT, currentChat));
+                            Chat chat = currentChat == null ? null : new Chat(currentChat);
+                            out.writeObject(new Response(RequestType.GET_CURRENT_CHAT, chat));
                             break;
                         }
                         case GET_ONLINE_AMOUNT: {
-                            Integer amount = (int)(userList.stream()
+                            Integer amount = (int) (userList.stream()
                                     .filter(User::isOnline).count());
                             out.writeObject(new Response(RequestType.GET_ONLINE_AMOUNT, amount));
                             break;
@@ -145,23 +144,43 @@ class Service implements Runnable {
                             for (String userName : request.getParticipantNames()) {
                                 participants.add(findUser(userName));
                             }
-                            Chat chat = new Chat(participants);
+                            Chat chat = new Chat(Chat.ChatType.PRIVATE_CHAT, participants);
                             if (!chatList.contains(chat)) {
                                 chatList.add(chat);
                                 currentChat = chat;
-                            }
-                            else {
+                            } else {
                                 currentChat = chatList.get(chatList.indexOf(chat));
                             }
-                            out.writeObject(new Response(RequestType.CREAT_PRIVATE_CHAT, 0));
+//                            out.writeObject(new Response(RequestType.CREAT_PRIVATE_CHAT, 0));
                             break;
                         }
                         case CREAT_GROUP_CHAT: {
                             //TODO
+                            int a = 1; //
+                            break;
+                        }
+                        case SEND_MESSAGE: {
+                            for (Chat chat : chatList) {
+                                if (chat.equals(request.getChat())) {
+                                    chat.getMessages().add(request.getMessage());
+                                    chat.setLastActiveTime(System.currentTimeMillis());
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+
+                        case CHANGE_CURRENT_CHAT: {
+                            for (Chat chat : chatList) {
+                                if (chat.equals(request.getChat())) {
+                                    currentChat = chat;
+                                    break;
+                                }
+                            }
                             break;
                         }
                         case DISCONNECT: {
-                            System.out.println("A client closed connection.");
+                            System.out.println("A client closed connection. @" + user.getUserName());
                             user.setOnline(false);
                             flag = false;
                             break;
@@ -171,7 +190,7 @@ class Service implements Runnable {
             }
         } catch (IOException e) {
             System.out.println("A client lost connection by accident.");
-            user.setOnline(false);
+            if (user != null) user.setOnline(false);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {

@@ -16,10 +16,7 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Controller implements Initializable {
@@ -74,10 +71,10 @@ public class Controller implements Initializable {
 
         if (currentChat != null) {
             setChatNameLabel();
-            // TODO: 设置 chatContentListView
-//            ObservableList<Message> messageObservableList =
-//                    FXCollections.observableArrayList(currentChat.getMessages());
-//            chatContentListView.setItems(messageObservableList);
+
+            ObservableList<Message> messageObservableList =
+                    FXCollections.observableArrayList(currentChat.getMessages());
+            chatContentListView.setItems(messageObservableList);
         }
         else {
             chatNameLabel.setText("null");
@@ -132,9 +129,7 @@ public class Controller implements Initializable {
      * UserA, UserB (2)
      */
     @FXML
-    public void createGroupChat() {
-
-    }
+    public void createGroupChat() {}
 
     /**
      * Sends the message to the <b>currently selected</b> chat.
@@ -146,6 +141,7 @@ public class Controller implements Initializable {
     public void doSendMessage() {
         if (inputArea.getText() == null || inputArea.getText().equals("") || currentChat == null) return;
         client.sendMessage(inputArea.getText(), currentChat);
+        inputArea.clear();
     }
 
     @FXML
@@ -183,7 +179,7 @@ public class Controller implements Initializable {
                     nameLabel.setWrapText(true);
                     nameLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px;");
 
-                    if (user.getUserName().equals(msg.getSentBy())) {
+                    if (user.equals(msg.getSentBy())) {
                         wrapper.setAlignment(Pos.TOP_RIGHT);
                         wrapper.getChildren().addAll(msgLabel, nameLabel);
                         msgLabel.setPadding(new Insets(0, 20, 0, 0));
@@ -208,7 +204,7 @@ public class Controller implements Initializable {
                 @Override
                 public void updateItem(User usr, boolean empty) {
 
-                    System.out.println("UserCell updated.");
+//                    System.out.println("UserCell updated.");
                     super.updateItem(usr, empty);
                     if (empty || Objects.isNull(usr)) {
                         setText(null);
@@ -243,7 +239,7 @@ public class Controller implements Initializable {
                 @Override
                 public void updateItem(Chat chat, boolean empty) {
 
-                    System.out.println("ChatNameCell updated.");
+//                    System.out.println("ChatNameCell updated.");
                     super.updateItem(chat, empty);
                     if (empty || Objects.isNull(chat)) {
                         setText(null);
@@ -266,6 +262,8 @@ public class Controller implements Initializable {
                     setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
                     setGraphic(wrapper);
                 }
+
+
             };
         }
     }
@@ -283,7 +281,20 @@ public class Controller implements Initializable {
             }
         }
         else if (chat.getChatType() == Chat.ChatType.GROUP_CHAT) {
-            chatName = chat.getGroupChatName();
+            if (chat.getParticipants().size() == 3) {
+                chat.getParticipants().sort(Comparator.comparing(User::getUserName));
+                chatName = chat.getParticipants().get(0).getUserName() + ", " +
+                        chat.getParticipants().get(1).getUserName() + ", " +
+                        chat.getParticipants().get(2).getUserName();
+            }
+            else if (chat.getParticipants().size() > 3) {
+                chat.getParticipants().sort(Comparator.comparing(User::getUserName));
+                chatName = chat.getParticipants().get(0).getUserName() + ", " +
+                        chat.getParticipants().get(1).getUserName() + ", " +
+                        chat.getParticipants().get(2).getUserName() + "...";
+            }
+            else
+                throw new RuntimeException("Unexpected branch");
         }
         else
             throw new RuntimeException("Unexpected branch");
@@ -326,6 +337,7 @@ public class Controller implements Initializable {
         }
         for (Chat chat : chatList) {
             if (currentChat.equals(chat)) {
+                chat = new Chat(currentChat);
                 this.currentChat = chat;
                 return;
             }
