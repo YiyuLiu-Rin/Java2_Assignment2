@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -128,9 +129,11 @@ public class Client extends Application {
                 System.out.println("A client is closed. @" + user.getUserName());
                 try {
                     out.writeObject(new Request(RequestType.DISCONNECT));
-                    requestThread.interrupt();
+//                    in.close();
+//                    out.close();
+//                    socket.close();
                     receiveThread.interrupt();
-                    Platform.exit();
+                    requestThread.interrupt();
                     System.exit(0);
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
@@ -149,6 +152,7 @@ public class Client extends Application {
             receiveThread = new Thread(receive);
             requestThread.start();
             receiveThread.start();
+
         }
 
     }
@@ -170,6 +174,15 @@ public class Client extends Application {
     }
 
     public void creatGroupChat(List<String> participantNames) {
+        if (participantNames.size() < 3)
+            showInfoDialog("Group chat should have at least 3 participants!");
+        else {
+            try {
+                out.writeObject(new Request(RequestType.CREAT_GROUP_CHAT, participantNames));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void sendMessage(String text, Chat chat) {
@@ -290,7 +303,8 @@ public class Client extends Application {
                         Thread.sleep(1000);
                     } catch (IOException | InterruptedException e) {
 //                        e.printStackTrace();
-                        System.out.println("RoutineRequestThread is killed.");
+//                        System.out.println("RoutineRequestThread is killed.");
+                        System.exit(0);
                         break;
                     }
                 }
@@ -357,10 +371,19 @@ public class Client extends Application {
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                         break;
-                    } catch (IOException e) {
+                    } catch (EOFException e) {
+                        // 关闭客户端造成
 //                        e.printStackTrace();
-                        System.out.println("ReceiveResponseThread is killed.");
+//                        System.out.println("ReceiveResponseThread is killed.");
+                        System.exit(0);
                         break;
+                    } catch (SocketException e) {
+                        // 服务器崩溃造成
+//                        e.printStackTrace();
+                        System.out.println("The server crashed down."); //
+                        System.exit(0); //
+                        // TODO: 处理异常
+                    } catch (IOException ignored) {
                     }
                 }
             }

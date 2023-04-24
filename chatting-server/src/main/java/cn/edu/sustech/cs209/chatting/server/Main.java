@@ -155,8 +155,17 @@ class Service implements Runnable {
                             break;
                         }
                         case CREAT_GROUP_CHAT: {
-                            //TODO
-                            int a = 1; //
+                            List<User> participants = new ArrayList<>();
+                            for (String userName : request.getParticipantNames()) {
+                                participants.add(findUser(userName));
+                            }
+                            Chat chat = new Chat(Chat.ChatType.GROUP_CHAT, participants);
+                            if (!chatList.contains(chat)) {
+                                chatList.add(chat);
+                                currentChat = chat;
+                            } else {
+                                currentChat = chatList.get(chatList.indexOf(chat));
+                            }
                             break;
                         }
                         case SEND_MESSAGE: {

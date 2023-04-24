@@ -11,6 +11,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -59,16 +60,6 @@ public class Controller implements Initializable {
         currentChat = null;
         onlineAmount = 0;
 
-
-        ////////
-//        chatListView.getSelectionModel().selectedItemProperty().addListener((var1, var2, var3) -> {
-//            System.out.println("!!!!!!!!!!!!!!!!");
-//        });
-
-//        chatListView.getSelectionModel().selectedItemProperty().addListener((observable, oldVal, newVal) -> {
-//            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-//        });
-
     }
 
     public void refresh() {
@@ -91,12 +82,6 @@ public class Controller implements Initializable {
         }
 
         setOnlineAmountLabel();
-
-        ////////////
-//        MultipleSelectionModel<Chat> chatSelectionModel = chatListView.getSelectionModel();
-//        Chat selectedChat = chatSelectionModel.getSelectedItem();
-//        if (selectedChat != null)
-//            System.out.println(selectedChat + " !!!!!!!!!!!!!!!!");
 
     }
 
@@ -147,38 +132,50 @@ public class Controller implements Initializable {
     @FXML
     public void createGroupChat() {
 
-        /*AtomicReference<String> targetUsers = new AtomicReference<>();  // 一定要用这个吗？
+        List<String> targetUsers = new ArrayList<>();
         Stage stage = new Stage();
 
-//        ComboBox<String> userSelectionBox = new ComboBox<>();
-//        List<String> onlineUsers = new ArrayList<>();
-//        for (User usr : onlineUserList) {
-//            if (!usr.equals(this.user))
-//                onlineUsers.add(usr.getUserName());
-//        }
-//        userSelectionBox.getItems().addAll(onlineUsers);
+        GridPane gridPane = new GridPane();
+        gridPane.setAlignment(Pos.CENTER);
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
 
-        CheckBox userSelectionBox = new CheckBox();
         List<String> onlineUsers = new ArrayList<>();
         for (User usr : onlineUserList) {
             if (!usr.equals(this.user))
                 onlineUsers.add(usr.getUserName());
         }
-        userSelectionBox.getItems().addAll(onlineUsers);
+
+        List<CheckBox> checkBoxes = new ArrayList<>();
+        for (int i = 0; i < onlineUsers.size(); i++) {
+            CheckBox checkBox = new CheckBox(onlineUsers.get(i));
+            checkBox.setAllowIndeterminate(false);
+            checkBoxes.add(checkBox);
+            gridPane.add(checkBox, 0, i);
+        }
 
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
-            targetUsers.set(userSelectionBox.getSelectionModel().getSelectedItem());
+//            targetUsers.set(userSelectionBox.getSelectionModel().getSelectedItem());
+//            stage.close();
+//            client.creatPrivateChat(String.valueOf(targetUsers));
+            for (int i = 0; i < checkBoxes.size(); i++) {
+                if (checkBoxes.get(i).selectedProperty().get())
+                    targetUsers.add(onlineUsers.get(i));
+            }
+            targetUsers.add(user.getUserName());
             stage.close();
-            client.creatPrivateChat(String.valueOf(targetUsers));
+            client.creatGroupChat(targetUsers);
         });
 
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(20, 120, 20, 20));  // TODO: 调整GUI大小
-        box.getChildren().addAll(userSelectionBox, okBtn);
+        box.getChildren().addAll(gridPane, okBtn);
+
+//        stage.setScene(new Scene(gridPane, 500, 300));
         stage.setScene(new Scene(box));
-        stage.showAndWait();*/
+        stage.showAndWait();
 
     }
 
@@ -196,7 +193,35 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void doSendEmoji() {}
+    public void doSendEmoji() {
+        // "\uD83D\uDE04" laugh
+        // "\uD83D\uDE22" sad
+        // "\uD83D\uDE09" wink
+        // "\uD83D\uDE18" kiss
+        // "\uD83D\uDE02" crying_laugh
+
+        AtomicReference<String> emoji = new AtomicReference<>();
+        Stage stage = new Stage();
+
+        ComboBox<String> emojiSelectionBox = new ComboBox<>();
+        emojiSelectionBox.getItems().addAll("\uD83D\uDE04", "\uD83D\uDE22",
+                "\uD83D\uDE09", "\uD83D\uDE18", "\uD83D\uDE02");
+
+        Button okBtn = new Button("OK");
+        okBtn.setOnAction(e -> {
+            emoji.set(emojiSelectionBox.getSelectionModel().getSelectedItem());
+            stage.close();
+            client.sendMessage(String.valueOf(emoji), currentChat);
+        });
+
+        HBox box = new HBox(10);
+        box.setAlignment(Pos.CENTER);
+        box.setPadding(new Insets(20, 120, 20, 20));  // TODO: 调整GUI大小
+        box.getChildren().addAll(emojiSelectionBox, okBtn);
+        stage.setScene(new Scene(box));
+        stage.showAndWait();
+
+    }
 
     @FXML
     public void doSendFile() {}
