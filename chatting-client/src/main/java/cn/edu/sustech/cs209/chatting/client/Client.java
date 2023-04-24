@@ -1,9 +1,6 @@
 package cn.edu.sustech.cs209.chatting.client;
 
-import cn.edu.sustech.cs209.chatting.common.Request;
-import cn.edu.sustech.cs209.chatting.common.RequestType;
-import cn.edu.sustech.cs209.chatting.common.Response;
-import cn.edu.sustech.cs209.chatting.common.User;
+import cn.edu.sustech.cs209.chatting.common.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.EventHandler;
@@ -73,12 +70,11 @@ public class Client extends Application {
                 Object obj = in.readObject();
                 if (obj.getClass() == User.class) {
                     // 登录成功
-                    user = (User)obj;
+                    user = (User) obj;
                     System.out.println("Log in succeeded. @" + user.getUserName());
                     break;
-                }
-                else if (obj.getClass() == Integer.class) {
-                    Integer responseInfo = (Integer)obj;
+                } else if (obj.getClass() == Integer.class) {
+                    Integer responseInfo = (Integer) obj;
                     switch (responseInfo) {
                         case 1: {
                             // 无此用户
@@ -98,34 +94,28 @@ public class Client extends Application {
                         default:
                             throw new RuntimeException("Unexpected branch");
                     }
-                }
-                else
+                } else
                     throw new RuntimeException("Unexpected branch");
-            }
-            else if (input.get()[0].equals("SIGNUP")) {
+            } else if (input.get()[0].equals("SIGNUP")) {
                 User createdUser = new User(input.get()[1], input.get()[2]);
                 Request request = new Request(RequestType.SIGN_UP, createdUser);
                 out.writeObject(request);
                 Object obj = in.readObject();
                 if (obj.getClass() == User.class) {
                     // 注册成功
-                    user = (User)obj;
+                    user = (User) obj;
                     System.out.println("Sign up succeeded. @" + user.getUserName());
                     break;
-                }
-                else if (obj.getClass() == Integer.class) {
-                    Integer responseInfo = (Integer)obj;
+                } else if (obj.getClass() == Integer.class) {
+                    Integer responseInfo = (Integer) obj;
                     if (responseInfo == 1) {
                         // 已有用户
                         showInfoDialog("This username has been already used!");
-                    }
-                    else
+                    } else
                         throw new RuntimeException("Unexpected branch");
-                }
-                else
+                } else
                     throw new RuntimeException("Unexpected branch");
-            }
-            else
+            } else
                 throw new RuntimeException("Unexpected branch");
         }
 
@@ -163,9 +153,29 @@ public class Client extends Application {
 
     }
 
-    public void creatPrivateChat(List<String> participantNames) {
-
+    public void creatPrivateChat(String targetUser) {
+        List<String> participantNames = new ArrayList<>();
+        participantNames.add(user.getUserName());
+        participantNames.add(targetUser);
+        try {
+            out.writeObject(new Request(RequestType.CREAT_PRIVATE_CHAT, participantNames));
+//            Object obj = in.readObject();
+//            if (obj.getClass() != Response.class ||
+//                    ((Response)obj).responseType != RequestType.CREAT_PRIVATE_CHAT ||
+//                    ((Response)obj).getObj().getClass() != Integer.class)
+//                throw new RuntimeException("Unexpected branch");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
+
+    public void creatGroupChat(List<String> participantNames) {
+    }
+
+    public void sendMessage(String text, Chat chat) {
+        Message message = new Message(System.currentTimeMillis(), user, text);
+    }
+
 
     private static Optional<String[]> showLoginDialog() {
 
@@ -209,8 +219,7 @@ public class Client extends Application {
                 else
                     result[0] = "SIGNUP";
                 return result;
-            }
-            else
+            } else
                 return null;
         });
 
@@ -254,8 +263,8 @@ public class Client extends Application {
                 if (flag) {
                     try {
                         out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST, user));
-//                        out.writeObject(new Request(RequestType.GET_CHAT_LIST, user));
-//                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT, user));
+                        out.writeObject(new Request(RequestType.GET_CHAT_LIST, user));
+                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT, user));
                         out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT, user));
                         while (true) {
                             Thread.sleep(10);
@@ -264,10 +273,10 @@ public class Client extends Application {
                                 break;
                             }
                         }
-                        Thread.sleep(500);
+                        Thread.sleep(1000);
                     } catch (IOException | InterruptedException e) {
-//                        throw new RuntimeException(e);
-                        System.out.println("RoutineRequestThread is interrupted.");
+//                        e.printStackTrace();
+                        System.out.println("RoutineRequestThread is killed.");
                     }
                 }
             }
@@ -299,34 +308,44 @@ public class Client extends Application {
                     try {
                         Object obj = in.readObject();
                         if (obj.getClass() == Response.class) {
-                            Response response = (Response)obj;
-                            System.out.println("A client received a response: " + response.responseType +
-                                    " @" + user.getUserName());
+                            Response response = (Response) obj;
+//                            System.out.println("A client received a response: " + response.responseType +
+//                                    " @" + user.getUserName());
                             switch (response.responseType) {
                                 case GET_ONLINE_USER_LIST: {
-                                    controller.setOnlineUserList((List<User>)response.getObj());
+                                    controller.setOnlineUserList((List<User>) response.getObj());
                                     break;
                                 }
-
-
+                                case GET_CHAT_LIST: {
+                                    controller.setChatList((List<Chat>) response.getObj());
+                                    break;
+                                }
+                                case GET_CURRENT_CHAT: {
+                                    controller.setCurrentChat((Chat) response.getObj());
+                                    break;
+                                }
                                 case GET_ONLINE_AMOUNT: {
-                                    controller.setOnlineAmount((Integer)response.getObj());
+                                    controller.setOnlineAmount((Integer) response.getObj());
                                     Platform.runLater(() -> {
                                         controller.refresh();
                                         refreshed = true;
                                     });
                                     break;
                                 }
+                                default: {
+                                    break;
+                                }
                             }
-                        }
-                        else {
+                        } else {
                             throw new RuntimeException("Unexpected branch");
                         }
                     } catch (ClassNotFoundException e) {
-                        throw new RuntimeException(e);
+                        e.printStackTrace();
+                        break;
                     } catch (IOException e) {
-//                        throw new RuntimeException(e);
-                        System.out.println("ReceiveResponseThread read to the end.");
+//                        e.printStackTrace();
+                        System.out.println("ReceiveResponseThread is killed.");
+                        break;
                     }
                 }
             }

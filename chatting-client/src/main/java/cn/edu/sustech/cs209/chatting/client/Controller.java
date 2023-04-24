@@ -36,6 +36,8 @@ public class Controller implements Initializable {
     ListView<User> onlineUserListView;
     @FXML
     ListView<Message> chatContentListView;
+    @FXML
+    TextArea inputArea;
 
     // 不变信息
     private Client client;
@@ -51,8 +53,8 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
 
-        chatListView.setCellFactory(new ChatNameCellFactory());
         onlineUserListView.setCellFactory(new OnlineUserCellFactory());
+        chatListView.setCellFactory(new ChatNameCellFactory());
         chatContentListView.setCellFactory(new MessageCellFactory());
 
         onlineUserList = new ArrayList<>();
@@ -73,6 +75,12 @@ public class Controller implements Initializable {
         if (currentChat != null) {
             setChatNameLabel();
             // TODO: 设置 chatContentListView
+//            ObservableList<Message> messageObservableList =
+//                    FXCollections.observableArrayList(currentChat.getMessages());
+//            chatContentListView.setItems(messageObservableList);
+        }
+        else {
+            chatNameLabel.setText("null");
         }
 
         setOnlineAmountLabel();
@@ -82,16 +90,13 @@ public class Controller implements Initializable {
     @FXML
     public void createPrivateChat() {
 
-        AtomicReference<String> targetUser = new AtomicReference<>();
+        AtomicReference<String> targetUser = new AtomicReference<>();  // 一定要用这个吗？
         Stage stage = new Stage();
 
         ComboBox<String> userSelectionBox = new ComboBox<>();
-//        List<String> onlineUsers = onlineUserList.stream()
-//                        .filter(usr -> !usr.getUserName().equals(this.user.getUserName()))
-//                .map(User::getUserName).toList();
         List<String> onlineUsers = new ArrayList<>();
         for (User usr : onlineUserList) {
-            if (!usr.getUserName().equals(this.user.getUserName()))
+            if (!usr.equals(this.user))
                 onlineUsers.add(usr.getUserName());
         }
         userSelectionBox.getItems().addAll(onlineUsers);
@@ -100,23 +105,19 @@ public class Controller implements Initializable {
         okBtn.setOnAction(e -> {
             targetUser.set(userSelectionBox.getSelectionModel().getSelectedItem());
             stage.close();
+            client.creatPrivateChat(String.valueOf(targetUser));
         });
 
         HBox box = new HBox(10);
         box.setAlignment(Pos.CENTER);
-        box.setPadding(new Insets(20, 20, 20, 20));
+        box.setPadding(new Insets(20, 120, 20, 20));  // TODO: 调整GUI大小
         box.getChildren().addAll(userSelectionBox, okBtn);
         stage.setScene(new Scene(box));
         stage.showAndWait();
 
+        // 在别的地方判断了
         // TODO: if the current user already chatted with the selected user, just open the chat with that user
-
-
         // TODO: otherwise, create a new chat item in the left panel, the title should be the selected user's name
-        List<String> participantNames = new ArrayList<>();
-        participantNames.add(user.getUserName());
-        participantNames.add(String.valueOf(targetUser));
-        client.creatPrivateChat(participantNames);
 
     }
 
@@ -132,6 +133,7 @@ public class Controller implements Initializable {
      */
     @FXML
     public void createGroupChat() {
+
     }
 
     /**
@@ -142,7 +144,8 @@ public class Controller implements Initializable {
      */
     @FXML
     public void doSendMessage() {
-        // TODO
+        if (inputArea.getText() == null || inputArea.getText().equals("") || currentChat == null) return;
+        client.sendMessage(inputArea.getText(), currentChat);
     }
 
     @FXML
@@ -163,10 +166,12 @@ public class Controller implements Initializable {
 
                 @Override
                 public void updateItem(Message msg, boolean empty) {
+
+                    System.out.println("MessageCell updated.");
                     super.updateItem(msg, empty);
                     if (empty || Objects.isNull(msg)) {
-                        //setText(null);
-                        //setGraphic(null);
+                        setText(null);
+                        setGraphic(null);
                         return;
                     }
 
@@ -203,10 +208,11 @@ public class Controller implements Initializable {
                 @Override
                 public void updateItem(User usr, boolean empty) {
 
+                    System.out.println("UserCell updated.");
                     super.updateItem(usr, empty);
                     if (empty || Objects.isNull(usr)) {
-                        //setText(null);
-                        //setGraphic(null);
+                        setText(null);
+                        setGraphic(null);
                         return;
                     }
 
@@ -237,10 +243,11 @@ public class Controller implements Initializable {
                 @Override
                 public void updateItem(Chat chat, boolean empty) {
 
+                    System.out.println("ChatNameCell updated.");
                     super.updateItem(chat, empty);
                     if (empty || Objects.isNull(chat)) {
-                        //setText(null);
-                        //setGraphic(null);
+                        setText(null);
+                        setGraphic(null);
                         return;
                     }
 
@@ -303,11 +310,32 @@ public class Controller implements Initializable {
         this.user = user;
     }
 
+    public void setOnlineUserList(List<User> onlineUserList) {
+        this.onlineUserList = onlineUserList;
+    }
+
+    public void setChatList(List<Chat> chatList) {
+        this.chatList = chatList;
+    }
+
+    public void setCurrentChat(Chat currentChat) {
+//        this.currentChat = currentChat;
+        if (currentChat == null) {
+            this.currentChat = null;
+            return;
+        }
+        for (Chat chat : chatList) {
+            if (currentChat.equals(chat)) {
+                this.currentChat = chat;
+                return;
+            }
+        }
+        throw new RuntimeException("Unexpected branch");
+    }
+
     public void setOnlineAmount(int onlineAmount) {
         this.onlineAmount = onlineAmount;
     }
 
-    public void setOnlineUserList(List<User> onlineUserList) {
-        this.onlineUserList = onlineUserList;
-    }
+
 }

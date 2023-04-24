@@ -7,15 +7,37 @@ public class Request implements Serializable {
 
     public RequestType requestType;
     private User user;  // 发出请求的客户端对应的用户
-    private List<User> participants;  // 创建聊天时的用户列表
+    private List<String> participantNames;  // 创建聊天时的用户列表
+    private Chat chat;  // 指定的聊天
 
+
+    // 构造以下请求：LOG_IN, SIGN_UP, GET_ONLINE_USER_LIST, GET_CHAT_LIST, GET_CURRENT_CHAT, GET_ONLINE_AMOUNT, DISCONNECT
     public Request(RequestType requestType, User user) {
         this.requestType = requestType;
         this.user = user;
+    }
+
+    // 构造以下请求：CREAT_PRIVATE_CHAT, CREAT_GROUP_CHAT
+    public Request(RequestType requestType, List<String> participantNames) {
+        this.requestType = requestType;
+        this.participantNames = participantNames;
+    }
+
+    // 构造以下请求：SEND_MESSAGE, SEND_EMOJI, SEND_FILE, CHANGE_CURRENT_CHAT
+    public Request(RequestType requestType, Chat chat) {
+        this.requestType = requestType;
+        this.chat = chat;
     }
 
     public User getUser() {
         return user;
     }
 
+    public List<String> getParticipantNames() {
+        return participantNames;
+    }
+
+    public Chat getChat() {
+        return chat;
+    }
 }

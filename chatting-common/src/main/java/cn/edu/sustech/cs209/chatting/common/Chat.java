@@ -3,16 +3,18 @@ package cn.edu.sustech.cs209.chatting.common;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class Chat implements Comparable<Chat> {
+public class Chat implements Serializable, Comparable<Chat> {
 
     private ChatType chatType;
     private List<User> participants;
     private long lastActiveTime;
-    private ObservableList<Message> messages;
+    private List<Message> messages;
     private String groupChatName;
 
     @Override
@@ -42,13 +44,19 @@ public class Chat implements Comparable<Chat> {
         }
     }
 
-    public Chat(ChatType chatType, List<User> participants, String groupChatName) {
-        this.chatType = chatType;
+    public Chat(List<User> participants) {
+        this.chatType = ChatType.PRIVATE_CHAT;
         this.participants = participants;
         this.lastActiveTime = System.currentTimeMillis();
-        this.messages = FXCollections.observableArrayList();
-        if (chatType == ChatType.GROUP_CHAT)
-            this.groupChatName = groupChatName;
+        this.messages = new ArrayList<>();
+    }
+
+    public Chat(List<User> participants, String groupChatName) {
+        this.chatType = ChatType.GROUP_CHAT;
+        this.participants = participants;
+        this.lastActiveTime = System.currentTimeMillis();
+        this.messages = new ArrayList<>();
+        this.groupChatName = groupChatName;
     }
 
     public ChatType getChatType() {
@@ -59,11 +67,19 @@ public class Chat implements Comparable<Chat> {
         return participants;
     }
 
+    public long getLastActiveTime() {
+        return lastActiveTime;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
     public String getGroupChatName() {
         return groupChatName;
     }
 
-    public enum ChatType {
+    public enum ChatType implements Serializable {
         PRIVATE_CHAT, GROUP_CHAT
     }
 }

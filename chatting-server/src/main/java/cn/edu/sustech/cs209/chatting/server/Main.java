@@ -6,6 +6,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class Main {
@@ -40,10 +42,14 @@ class Service implements Runnable {
     private ObjectOutputStream out;
     private User user;
 
+    private Chat currentChat;
+
     public Service(Socket socket, List<User> userList, List<Chat> chatList) {
         this.socket = socket;
         this.userList = userList;
         this.chatList = chatList;
+
+        this.currentChat = null;
     }
 
     @Override
@@ -56,8 +62,11 @@ class Service implements Runnable {
                 Object obj = in.readObject();
                 if (obj.getClass() == Request.class) {
                     Request request = (Request)obj;
-                    System.out.println("Server received a request: " + request.requestType +
-                            " @" + request.getUser().getUserName());
+                    if (request.requestType == RequestType.LOG_IN || request.requestType == RequestType.SIGN_UP ||
+                            request.requestType == RequestType.DISCONNECT) {
+                        System.out.println("Server received a request: " + request.requestType +
+                                " @" + request.getUser().getUserName());
+                    }
                     switch (request.requestType) {
                         case LOG_IN: {
                             if (!userList.contains(request.getUser())) {
@@ -117,11 +126,12 @@ class Service implements Runnable {
                                     }
                                 }
                             }
+                            Collections.sort(hisChatList, Comparator.reverseOrder());
                             out.writeObject(new Response(RequestType.GET_CHAT_LIST, hisChatList));
                             break;
                         }
                         case GET_CURRENT_CHAT: {
-                            //TODO
+                            out.writeObject(new Response(RequestType.GET_CURRENT_CHAT, currentChat));
                             break;
                         }
                         case GET_ONLINE_AMOUNT: {
@@ -130,7 +140,26 @@ class Service implements Runnable {
                             out.writeObject(new Response(RequestType.GET_ONLINE_AMOUNT, amount));
                             break;
                         }
-
+                        case CREAT_PRIVATE_CHAT: {
+                            List<User> participants = new ArrayList<>();
+                            for (String userName : request.getParticipantNames()) {
+                                participants.add(findUser(userName));
+                            }
+                            Chat chat = new Chat(participants);
+                            if (!chatList.contains(chat)) {
+                                chatList.add(chat);
+                                currentChat = chat;
+                            }
+                            else {
+                                currentChat = chatList.get(chatList.indexOf(chat));
+                            }
+                            out.writeObject(new Response(RequestType.CREAT_PRIVATE_CHAT, 0));
+                            break;
+                        }
+                        case CREAT_GROUP_CHAT: {
+                            //TODO
+                            break;
+                        }
                         case DISCONNECT: {
                             System.out.println("A client closed connection.");
                             user.setOnline(false);
@@ -156,6 +185,14 @@ class Service implements Runnable {
             }
         }
 
+    }
+
+    private User findUser(String userName) {
+        for (User user : userList) {
+            if (user.getUserName().equals(userName))
+                return user;
+        }
+        return null;
     }
 
 }

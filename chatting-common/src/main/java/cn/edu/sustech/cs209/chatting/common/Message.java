@@ -1,6 +1,8 @@
 package cn.edu.sustech.cs209.chatting.common;
 
-public class Message {
+import java.io.Serializable;
+
+public class Message implements Serializable {
 
 //    private final Long timestamp;
 //    private final String sentBy;
@@ -9,13 +11,13 @@ public class Message {
 
     private final Long timestamp;
     private final User sentBy;
-    private final Chat sendTo;
+//    private final Chat sendTo;
     private final String content;
 
-    public Message(Long timestamp, User sentBy, Chat sendTo, String content) {
+    public Message(Long timestamp, User sentBy, String content) {
         this.timestamp = timestamp;
         this.sentBy = sentBy;
-        this.sendTo = sendTo;
+//        this.sendTo = sendTo;
         this.content = content;
     }
 
@@ -25,10 +27,6 @@ public class Message {
 
     public User getSentBy() {
         return sentBy;
-    }
-
-    public Chat getSendTo() {
-        return sendTo;
     }
 
     public String getContent() {
