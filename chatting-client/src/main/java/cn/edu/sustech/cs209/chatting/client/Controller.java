@@ -1,6 +1,7 @@
 package cn.edu.sustech.cs209.chatting.client;
 
 import cn.edu.sustech.cs209.chatting.common.Chat;
+import cn.edu.sustech.cs209.chatting.common.ChatItem;
 import cn.edu.sustech.cs209.chatting.common.Message;
 import cn.edu.sustech.cs209.chatting.common.User;
 import javafx.collections.FXCollections;
@@ -30,7 +31,7 @@ public class Controller implements Initializable {
     @FXML
     Label onlineAmountLabel;
     @FXML
-    ListView<Chat> chatListView;
+    ListView<ChatItem> chatListView;
     @FXML
     ListView<User> onlineUserListView;
     @FXML
@@ -45,6 +46,7 @@ public class Controller implements Initializable {
     // 待维护信息
     private List<User> onlineUserList;
     private List<Chat> chatList;
+    private List<ChatItem> chatItemList;
     private Chat currentChat;
     private int onlineAmount;
 
@@ -58,6 +60,7 @@ public class Controller implements Initializable {
 
         onlineUserList = new ArrayList<>();
         chatList = new ArrayList<>();
+        chatItemList = new ArrayList<>();
         currentChat = null;
         onlineAmount = 0;
 
@@ -68,8 +71,8 @@ public class Controller implements Initializable {
         ObservableList<User> userObservableList = FXCollections.observableArrayList(onlineUserList);
         onlineUserListView.setItems(userObservableList);
 
-        ObservableList<Chat> chatObservableList = FXCollections.observableArrayList(chatList);
-        chatListView.setItems(chatObservableList);
+        ObservableList<ChatItem> chatItemObservableList = FXCollections.observableArrayList(chatItemList);
+        chatListView.setItems(chatItemObservableList);
 
         if (currentChat != null) {
             setChatNameLabel();
@@ -268,7 +271,8 @@ public class Controller implements Initializable {
 
     @FXML
     public void changeCurrentChat() {
-        Chat chat = chatListView.getSelectionModel().getSelectedItem();
+        ChatItem chatItem = chatListView.getSelectionModel().getSelectedItem();
+        Chat chat = chatList.get(chatItemList.indexOf(chatItem));
         client.changeCurrentChat(chat);
     }
 
@@ -355,17 +359,17 @@ public class Controller implements Initializable {
         }
     }
 
-    private class ChatNameCellFactory implements Callback<ListView<Chat>, ListCell<Chat>> {
+    private class ChatNameCellFactory implements Callback<ListView<ChatItem>, ListCell<ChatItem>> {
         @Override
-        public ListCell<Chat> call(ListView<Chat> param) {
-            return new ListCell<Chat>() {
+        public ListCell<ChatItem> call(ListView<ChatItem> param) {
+            return new ListCell<ChatItem>() {
 
                 @Override
-                public void updateItem(Chat chat, boolean empty) {
+                public void updateItem(ChatItem chatItem, boolean empty) {
 
 //                    System.out.println("ChatNameCell updated.");
-                    super.updateItem(chat, empty);
-                    if (empty || Objects.isNull(chat)) {
+                    super.updateItem(chatItem, empty);
+                    if (empty || Objects.isNull(chatItem)) {
                         setText(null);
                         setGraphic(null);
                         return;
@@ -373,7 +377,10 @@ public class Controller implements Initializable {
 
                     HBox wrapper = new HBox();
 
-                    Label nameLabel = new Label(getChatName(chat));
+                    Label nameLabel = new Label(getChatNameWithProperty(chatList.get(chatItemList.indexOf(chatItem)),
+                            chatItem.isNew()));
+
+//                    Label nameLabel = new Label(getChatName(chat));
 
                     nameLabel.setPrefSize(200, 20);
                     nameLabel.setWrapText(true);
@@ -425,6 +432,41 @@ public class Controller implements Initializable {
         return chatName;
     }
 
+    public String getChatNameWithProperty(Chat chat, boolean hasNew) {
+        String chatName = null;
+        if (chat.getChatType() == Chat.ChatType.PRIVATE_CHAT) {
+            for (User usr : chat.getParticipants()) {
+                if (!usr.getUserName().equals(user.getUserName())) {
+                    chatName = usr.getUserName();
+                    break;
+                }
+            }
+        }
+        else if (chat.getChatType() == Chat.ChatType.GROUP_CHAT) {
+            if (chat.getParticipants().size() == 3) {
+                chat.getParticipants().sort(Comparator.comparing(User::getUserName));
+                chatName = chat.getParticipants().get(0).getUserName() + ", " +
+                        chat.getParticipants().get(1).getUserName() + ", " +
+                        chat.getParticipants().get(2).getUserName();
+            }
+            else if (chat.getParticipants().size() > 3) {
+                chat.getParticipants().sort(Comparator.comparing(User::getUserName));
+                chatName = chat.getParticipants().get(0).getUserName() + ", " +
+                        chat.getParticipants().get(1).getUserName() + ", " +
+                        chat.getParticipants().get(2).getUserName() + "...";
+            }
+            else
+                throw new RuntimeException("Unexpected branch");
+        }
+        else
+            throw new RuntimeException("Unexpected branch");
+
+        if (hasNew)
+            return chatName + "(new)";
+        else
+            return chatName;
+    }
+
     public void setChatNameLabel() {
         chatNameLabel.setText(getChatName(currentChat));
     }
@@ -450,7 +492,33 @@ public class Controller implements Initializable {
     }
 
     public void setChatList(List<Chat> chatList) {
+
+        List<ChatItem> newChatItemList = new ArrayList<>();
+        for (Chat chat : chatList) {
+            ChatItem chatItem = new ChatItem(chat);
+            newChatItemList.add(chatItem);
+        }
+
+        for (Chat chat : chatList) {
+            if (this.chatList.contains(chat)) {
+                newChatItemList.get(chatList.indexOf(chat))
+                        .setIsNew(this.chatItemList.get(this.chatList.indexOf(chat)).isNew());
+                if (chatList.indexOf(chat) < this.chatList.indexOf(chat))
+                    newChatItemList.get(chatList.indexOf(chat)).setIsNew(true);
+                if (chat.getLastActiveTime() > this.chatList.get(this.chatList.indexOf(chat)).getLastActiveTime())
+                    newChatItemList.get(chatList.indexOf(chat)).setIsNew(true);
+//                if (chatList.indexOf(chat) == 0) //
+//                    newChatItemList.get(chatList.indexOf(chat)).setIsNew(true); //
+            }
+            else {
+                newChatItemList.get(chatList.indexOf(chat)).setIsNew(true);
+            }
+            if (chat.equals(currentChat))
+                newChatItemList.get(chatList.indexOf(chat)).setIsNew(false);
+        }
+
         this.chatList = chatList;
+        this.chatItemList = newChatItemList;
     }
 
     public void setCurrentChat(Chat currentChat) {

@@ -321,7 +321,7 @@ public class Client extends Application {
                             break;
                         }
                     }
-                    Thread.sleep(300);
+                    Thread.sleep(600);
                 } catch (IOException | InterruptedException e) {
 //                        e.printStackTrace();
 //                        System.out.println("RoutineRequestThread is killed.");
