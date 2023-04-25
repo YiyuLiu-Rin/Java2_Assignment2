@@ -64,8 +64,8 @@ class Service implements Runnable {
                     Request request = (Request) obj;
                     switch (request.requestType) {
                         case LOG_IN: {
-                            System.out.println("Server received a request: LOG_IN. @" +
-                                    request.getUser().getUserName());
+                            System.out.println("Server received a request: LOG_IN. @"
+                                    + request.getUser().getUserName());
                             if (!userList.contains(request.getUser())) {
                                 // 无此用户
                                 out.writeObject(1);
@@ -89,8 +89,8 @@ class Service implements Runnable {
                             break;
                         }
                         case SIGN_UP: {
-                            System.out.println("Server received a request: SIGN_UP. @" +
-                                    request.getUser().getUserName());
+                            System.out.println("Server received a request: SIGN_UP. @"
+                                    + request.getUser().getUserName());
                             if (userList.contains(request.getUser())) {
                                 // 已有用户
                                 out.writeObject(1);
@@ -143,8 +143,8 @@ class Service implements Runnable {
                             break;
                         }
                         case CREAT_PRIVATE_CHAT: {
-                            System.out.println("Server received a request: CREATE_PRIVATE_CHAT. @" +
-                                    user.getUserName());
+                            System.out.println("Server received a request: CREATE_PRIVATE_CHAT. @"
+                                    + user.getUserName());
                             List<User> participants = new ArrayList<>();
                             for (String userName : request.getParticipantNames()) {
                                 participants.add(findUser(userName));
@@ -160,8 +160,8 @@ class Service implements Runnable {
                             break;
                         }
                         case CREAT_GROUP_CHAT: {
-                            System.out.println("Server received a request: CREATE_GROUP_CHAT. @" +
-                                    user.getUserName());
+                            System.out.println("Server received a request: CREATE_GROUP_CHAT. @"
+                                    + user.getUserName());
                             List<User> participants = new ArrayList<>();
                             for (String userName : request.getParticipantNames()) {
                                 participants.add(findUser(userName));
@@ -176,8 +176,8 @@ class Service implements Runnable {
                             break;
                         }
                         case SEND_MESSAGE: {
-                            System.out.println("Server handled sending a message. @" +
-                                    user.getUserName());
+                            System.out.println("Server handled sending a message. @"
+                                    + user.getUserName());
                             for (Chat chat : chatList) {
                                 if (chat.equals(request.getChat())) {
                                     chat.getMessages().add(request.getMessage());
@@ -188,8 +188,8 @@ class Service implements Runnable {
                             break;
                         }
                         case SEND_FILE: {
-                            System.out.println("Server handled sending a file. @" +
-                                    user.getUserName());
+                            System.out.println("Server handled sending a file. @"
+                                    + user.getUserName());
                             for (Chat chat : chatList) {
                                 if (chat.equals(request.getChat())) {
                                     for (User usr : chat.getParticipants()) {
@@ -220,8 +220,8 @@ class Service implements Runnable {
                             break;
                         }
                         case CHANGE_CURRENT_CHAT: {
-                            System.out.println("A client changed his current chat. @" +
-                                    user.getUserName());
+                            System.out.println("A client changed his current chat. @"
+                                    + user.getUserName());
                             for (Chat chat : chatList) {
                                 if (chat.equals(request.getChat())) {
                                     currentChat = chat;

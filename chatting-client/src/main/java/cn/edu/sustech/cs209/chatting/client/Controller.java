@@ -115,8 +115,10 @@ public class Controller implements Initializable {
         stage.showAndWait();
 
         // 在别的地方判断了
-        // TODO: if the current user already chatted with the selected user, just open the chat with that user
-        // TODO: otherwise, create a new chat item in the left panel, the title should be the selected user's name
+        // TODO: if the current user already chatted with the selected user,
+        //  just open the chat with that user
+        // TODO: otherwise, create a new chat item in the left panel,
+        //  the title should be the selected user's name
 
     }
 

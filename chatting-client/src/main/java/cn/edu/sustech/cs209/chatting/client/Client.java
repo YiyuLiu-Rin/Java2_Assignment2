@@ -362,7 +362,8 @@ public class Client extends Application {
                         Object obj = in.readObject();
                         if (obj.getClass() == Response.class) {
                             Response response = (Response) obj;
-//                            System.out.println("A client received a response: " + response.responseType +
+//                            System.out.println("A client received a response: " +
+//                            response.responseType +
 //                                    " @" + user.getUserName());
                             switch (response.responseType) {
                                 case GET_ONLINE_USER_LIST: {
