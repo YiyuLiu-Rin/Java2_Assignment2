@@ -5,6 +5,7 @@ import cn.edu.sustech.cs209.chatting.common.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -100,6 +101,8 @@ class Service implements Runnable {
                             System.out.println("Sign up succeeded. @" + user.getUserName());
                             user.setOnline(true);
                             userList.add(user);
+                            File file = new File("./chatting-client/user_files/" + user.getUserName());
+                            file.mkdir();
                             out.writeObject(user);
                             break;
                         }
@@ -140,6 +143,8 @@ class Service implements Runnable {
                             break;
                         }
                         case CREAT_PRIVATE_CHAT: {
+                            System.out.println("Server received a request: CREATE_PRIVATE_CHAT. @" +
+                                    user.getUserName());
                             List<User> participants = new ArrayList<>();
                             for (String userName : request.getParticipantNames()) {
                                 participants.add(findUser(userName));
@@ -155,6 +160,8 @@ class Service implements Runnable {
                             break;
                         }
                         case CREAT_GROUP_CHAT: {
+                            System.out.println("Server received a request: CREATE_GROUP_CHAT. @" +
+                                    user.getUserName());
                             List<User> participants = new ArrayList<>();
                             for (String userName : request.getParticipantNames()) {
                                 participants.add(findUser(userName));
@@ -169,6 +176,8 @@ class Service implements Runnable {
                             break;
                         }
                         case SEND_MESSAGE: {
+                            System.out.println("Server handled sending a message. @" +
+                                    user.getUserName());
                             for (Chat chat : chatList) {
                                 if (chat.equals(request.getChat())) {
                                     chat.getMessages().add(request.getMessage());
@@ -178,8 +187,41 @@ class Service implements Runnable {
                             }
                             break;
                         }
+                        case SEND_FILE: {
+                            System.out.println("Server handled sending a file. @" +
+                                    user.getUserName());
+                            for (Chat chat : chatList) {
+                                if (chat.equals(request.getChat())) {
+                                    for (User usr : chat.getParticipants()) {
+                                        if (!usr.equals(request.getUploadedFile().getSentBy())) {
+                                            try {
 
+                                                String sourcePath = "./chatting-client/" +
+                                                        request.getUploadedFile().getFile().getPath();
+                                                File source = new File(sourcePath);
+
+                                                String destPath = "./chatting-client/user_files/" + usr.getUserName() + "/" +
+                                                        request.getUploadedFile().getTimestamp() + "_" +
+                                                        request.getUploadedFile().getFile().getName();
+                                                File dest = new File(destPath);
+
+//                                                System.out.println(source.getPath());
+//                                                System.out.println(dest.getPath());
+                                                Files.copy(source.toPath(), dest.toPath());
+
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                            break;
+                        }
                         case CHANGE_CURRENT_CHAT: {
+                            System.out.println("A client changed his current chat. @" +
+                                    user.getUserName());
                             for (Chat chat : chatList) {
                                 if (chat.equals(request.getChat())) {
                                     currentChat = chat;

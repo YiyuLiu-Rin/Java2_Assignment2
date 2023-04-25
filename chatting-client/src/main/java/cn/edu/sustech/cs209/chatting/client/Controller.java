@@ -16,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
+import java.io.File;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -187,13 +188,25 @@ public class Controller implements Initializable {
      */
     @FXML
     public void doSendMessage() {
-        if (inputArea.getText() == null || inputArea.getText().equals("") || currentChat == null) return;
+        if (currentChat == null) {
+            Client.showInfoDialog("There's no current chat!");
+            return;
+        }
+        if (inputArea.getText() == null || inputArea.getText().isEmpty()) {
+            Client.showInfoDialog("Can't send empty message!");
+            return;
+        }
         client.sendMessage(inputArea.getText(), currentChat);
         inputArea.clear();
     }
 
     @FXML
     public void doSendEmoji() {
+        if (currentChat == null) {
+            Client.showInfoDialog("There's no current chat!");
+            return;
+        }
+
         // "\uD83D\uDE04" laugh
         // "\uD83D\uDE22" sad
         // "\uD83D\uDE09" wink
@@ -224,7 +237,27 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void doSendFile() {}
+    public void doSendFile() {
+        if (currentChat == null) {
+            Client.showInfoDialog("There's no current chat!");
+            return;
+        }
+
+        Optional<String> input = Client.showChoosingFileDialog();
+        if (!input.isPresent())
+            return;
+        if (input.get().isEmpty()) {
+            Client.showInfoDialog("File name can't be empty!");
+            return;
+        }
+        String path = "user_files/" + user.getUserName() + "/" + input.get();
+        File file = new File(path);
+
+        if (!file.exists()) {
+            Client.showInfoDialog("Can't find this file!");
+        }
+        client.sendFile(file, currentChat);
+    }
 
     @FXML
     public void changeCurrentChat() {

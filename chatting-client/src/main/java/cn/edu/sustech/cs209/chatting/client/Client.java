@@ -158,6 +158,7 @@ public class Client extends Application {
     }
 
     public void creatPrivateChat(String targetUser) {
+        System.out.println("trying to create a private chat. @" + user.getUserName());
         List<String> participantNames = new ArrayList<>();
         participantNames.add(user.getUserName());
         participantNames.add(targetUser);
@@ -174,6 +175,7 @@ public class Client extends Application {
     }
 
     public void creatGroupChat(List<String> participantNames) {
+        System.out.println("trying to create a group chat. @" + user.getUserName());
         if (participantNames.size() < 3)
             showInfoDialog("Group chat should have at least 3 participants!");
         else {
@@ -186,6 +188,7 @@ public class Client extends Application {
     }
 
     public void sendMessage(String text, Chat chat) {
+        System.out.println("trying to send a message. @" + user.getUserName());
         Message message = new Message(System.currentTimeMillis(), user, text);
         Request request = new Request(RequestType.SEND_MESSAGE, chat, message);
         try {
@@ -195,14 +198,28 @@ public class Client extends Application {
         }
     }
 
+    public void sendFile(File file, Chat chat) {
+        System.out.println("trying to send a file. @" + user.getUserName());
+        UploadedFile uploadedFile = new UploadedFile(System.currentTimeMillis(), user, file);
+        Request request = new Request(RequestType.SEND_FILE, chat, uploadedFile);
+        try {
+            out.writeObject(request);
+            sendMessage("#notice_from_server#\nI send a file: " + file.getName(), chat);
+            showInfoDialog("Sending file succeeded!");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public void changeCurrentChat(Chat chat) {
+        System.out.println("trying to change current chat. @" + user.getUserName());
         try {
             out.writeObject(new Request(RequestType.CHANGE_CURRENT_CHAT, chat));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
 
     private static Optional<String[]> showLoginDialog() {
 
@@ -253,7 +270,8 @@ public class Client extends Application {
         return dialog.showAndWait();
     }
 
-    private static void showInfoDialog(String info) {
+    public static void showInfoDialog(String info) {
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Notice");
         alert.setHeaderText(null);
@@ -262,8 +280,14 @@ public class Client extends Application {
         alert.showAndWait();
     }
 
-    public void setRequestThreadFlag(boolean flag) {
-        request.flag = flag;
+    public static Optional<String> showChoosingFileDialog() {
+
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("choose file");
+        dialog.setHeaderText(null);
+        dialog.setContentText("Enter the file name");
+
+        return dialog.showAndWait();
     }
 
 
@@ -300,7 +324,7 @@ public class Client extends Application {
                                 break;
                             }
                         }
-                        Thread.sleep(1000);
+                        Thread.sleep(300);
                     } catch (IOException | InterruptedException e) {
 //                        e.printStackTrace();
 //                        System.out.println("RoutineRequestThread is killed.");

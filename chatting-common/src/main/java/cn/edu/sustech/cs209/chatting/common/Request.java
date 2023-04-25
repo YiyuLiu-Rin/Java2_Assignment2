@@ -11,6 +11,7 @@ public class Request implements Serializable {
     private List<String> participantNames;  // 创建聊天时的用户列表
     private Chat chat;  // 指定的聊天
     private Message message;  // 待发送消息
+    private UploadedFile uploadedFile;  // 待发送文件
 
 
     // 构造以下请求：LOG_IN, SIGN_UP
@@ -30,11 +31,18 @@ public class Request implements Serializable {
         this.participantNames = participantNames;
     }
 
-    // 构造以下请求：SEND_MESSAGE, SEND_EMOJI, SEND_FILE
+    // 构造以下请求：SEND_MESSAGE, SEND_EMOJI
     public Request(RequestType requestType, Chat chat, Message message) {
         this.requestType = requestType;
         this.chat = chat;
         this.message = message;
+    }
+
+    // 构造以下请求：SEND_FILE
+    public Request(RequestType requestType, Chat chat, UploadedFile uploadedFile) {
+        this.requestType = requestType;
+        this.chat = chat;
+        this.uploadedFile = uploadedFile;
     }
 
     // 构造以下请求：CHANGE_CURRENT_CHAT
@@ -58,5 +66,9 @@ public class Request implements Serializable {
 
     public Message getMessage() {
         return message;
+    }
+
+    public UploadedFile getUploadedFile() {
+        return uploadedFile;
     }
 }
