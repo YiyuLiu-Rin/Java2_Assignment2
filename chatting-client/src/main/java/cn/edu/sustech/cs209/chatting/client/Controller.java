@@ -261,6 +261,7 @@ public class Controller implements Initializable {
 
         if (!file.exists()) {
             Client.showInfoDialog("Can't find this file!");
+            return;
         }
         client.sendFile(file, currentChat);
     }

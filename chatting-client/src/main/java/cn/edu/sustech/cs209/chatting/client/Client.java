@@ -401,7 +401,7 @@ public class Client extends Application {
                 System.out.println("The server crashed down.");
                 Platform.runLater(() -> {
                     showInfoDialog("The server crashed down!");
-                    System.exit(1);
+                    System.exit(0);
                 });
                 // TODO: 处理异常
             } catch (IOException ignored) {
