@@ -271,9 +271,12 @@ public class Controller implements Initializable {
 
     @FXML
     public void changeCurrentChat() {
-        ChatItem chatItem = chatListView.getSelectionModel().getSelectedItem();
-        Chat chat = chatList.get(chatItemList.indexOf(chatItem));
-        client.changeCurrentChat(chat);
+        try {
+            ChatItem chatItem = chatListView.getSelectionModel().getSelectedItem();
+            Chat chat = chatList.get(chatItemList.indexOf(chatItem));
+            client.changeCurrentChat(chat);
+        } catch (Exception ignored) {
+        }
     }
 
 
