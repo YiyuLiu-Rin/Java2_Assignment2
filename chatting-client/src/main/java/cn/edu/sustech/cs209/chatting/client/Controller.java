@@ -224,6 +224,10 @@ public class Controller implements Initializable {
 
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
+            if (emojiSelectionBox.getSelectionModel().isEmpty()) {
+                Client.showInfoDialog("No emoji is chosen!");
+                return;
+            }
             emoji.set(emojiSelectionBox.getSelectionModel().getSelectedItem());
             stage.close();
             client.sendMessage(String.valueOf(emoji), currentChat);

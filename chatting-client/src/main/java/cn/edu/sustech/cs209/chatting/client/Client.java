@@ -299,38 +299,34 @@ public class Client extends Application {
         ObjectInputStream in;
         ObjectOutputStream out;
         ReceiveResponseThread receiveThread;
-        boolean flag;
 
         public RoutineRequestThread(ObjectInputStream in, ObjectOutputStream out) {
             this.in = in;
             this.out = out;
-            this.flag = true;
         }
 
         @Override
         public void run() {
             System.out.println("RoutineRequestThread started.");
             while (true) {
-                if (flag) {
-                    try {
-                        out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST));
-                        out.writeObject(new Request(RequestType.GET_CHAT_LIST));
-                        out.writeObject(new Request(RequestType.GET_CURRENT_CHAT));
-                        out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT));
-                        while (true) {
-                            Thread.sleep(10);
-                            if (receiveThread.refreshed) {
-                                receiveThread.refreshed = false;
-                                break;
-                            }
+                try {
+                    out.writeObject(new Request(RequestType.GET_ONLINE_USER_LIST));
+                    out.writeObject(new Request(RequestType.GET_CHAT_LIST));
+                    out.writeObject(new Request(RequestType.GET_CURRENT_CHAT));
+                    out.writeObject(new Request(RequestType.GET_ONLINE_AMOUNT));
+                    while (true) {
+                        Thread.sleep(10);
+                        if (receiveThread.refreshed) {
+                            receiveThread.refreshed = false;
+                            break;
                         }
-                        Thread.sleep(300);
-                    } catch (IOException | InterruptedException e) {
+                    }
+                    Thread.sleep(300);
+                } catch (IOException | InterruptedException e) {
 //                        e.printStackTrace();
 //                        System.out.println("RoutineRequestThread is killed.");
-                        System.exit(0);
-                        break;
-                    }
+                    System.exit(0);
+                    break;
                 }
             }
         }
@@ -343,75 +339,74 @@ public class Client extends Application {
 
         ObjectInputStream in;
         ObjectOutputStream out;
-        boolean flag;
         boolean refreshed;
 
         public ReceiveResponseThread(ObjectInputStream in, ObjectOutputStream out) {
             this.in = in;
             this.out = out;
-            this.flag = true;
             this.refreshed = true;
         }
 
         @Override
         public void run() {
             System.out.println("ReceiveResponseThread started.");
-            while (true) {
-                if (flag) {
-                    try {
-                        Object obj = in.readObject();
-                        if (obj.getClass() == Response.class) {
-                            Response response = (Response) obj;
+
+            try {
+                while (true) {
+                    Object obj = in.readObject();
+                    if (obj.getClass() == Response.class) {
+                        Response response = (Response) obj;
 //                            System.out.println("A client received a response: " +
 //                            response.responseType +
 //                                    " @" + user.getUserName());
-                            switch (response.responseType) {
-                                case GET_ONLINE_USER_LIST: {
-                                    controller.setOnlineUserList((List<User>) response.getObj());
-                                    break;
-                                }
-                                case GET_CHAT_LIST: {
-                                    controller.setChatList((List<Chat>) response.getObj());
-                                    break;
-                                }
-                                case GET_CURRENT_CHAT: {
-                                    controller.setCurrentChat((Chat) response.getObj());
-                                    break;
-                                }
-                                case GET_ONLINE_AMOUNT: {
-                                    controller.setOnlineAmount((Integer) response.getObj());
-                                    Platform.runLater(() -> {
-                                        controller.refresh();
-                                        refreshed = true;
-                                    });
-                                    break;
-                                }
-                                default: {
-                                    break;
-                                }
+                        switch (response.responseType) {
+                            case GET_ONLINE_USER_LIST: {
+                                controller.setOnlineUserList((List<User>) response.getObj());
+                                break;
                             }
-                        } else {
-                            throw new RuntimeException("Unexpected branch");
+                            case GET_CHAT_LIST: {
+                                controller.setChatList((List<Chat>) response.getObj());
+                                break;
+                            }
+                            case GET_CURRENT_CHAT: {
+                                controller.setCurrentChat((Chat) response.getObj());
+                                break;
+                            }
+                            case GET_ONLINE_AMOUNT: {
+                                controller.setOnlineAmount((Integer) response.getObj());
+                                Platform.runLater(() -> {
+                                    controller.refresh();
+                                    refreshed = true;
+                                });
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
                         }
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                        break;
-                    } catch (EOFException e) {
-                        // 关闭客户端造成
-//                        e.printStackTrace();
-//                        System.out.println("ReceiveResponseThread is killed.");
-                        System.exit(0);
-                        break;
-                    } catch (SocketException e) {
-                        // 服务器崩溃造成
-//                        e.printStackTrace();
-                        System.out.println("The server crashed down."); //
-                        System.exit(0); //
-                        // TODO: 处理异常
-                    } catch (IOException ignored) {
+                    } else {
+                        throw new RuntimeException("Unexpected branch");
                     }
                 }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (EOFException e) {
+                // 关闭客户端造成
+//                e.printStackTrace();
+//                System.out.println("ReceiveResponseThread is killed.");
+                System.exit(0);
+            } catch (SocketException e) {
+                // 服务器崩溃造成
+//                e.printStackTrace();
+                System.out.println("The server crashed down.");
+                Platform.runLater(() -> {
+                    showInfoDialog("The server crashed down!");
+                    System.exit(1);
+                });
+                // TODO: 处理异常
+            } catch (IOException ignored) {
             }
+
         }
     }
 

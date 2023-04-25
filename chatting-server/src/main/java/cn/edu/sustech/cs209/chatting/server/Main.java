@@ -22,12 +22,16 @@ public class Main {
         final int PORT = 8888;
         ServerSocket server = new ServerSocket(PORT);
         System.out.println("Server is started, waiting for clients to connect...");
-        while (true) {
-            Socket socket = server.accept();
-            System.out.println("A client is connected.");
+        try {
+            while (true) {
+                Socket socket = server.accept();
+                System.out.println("A client is connected.");
 
-            Thread t = new Thread(new Service(socket, userList, chatList));
-            t.start();
+                Thread t = new Thread(new Service(socket, userList, chatList));
+                t.start();
+            }
+        } finally {
+            System.out.println("................");
         }
     }
 
